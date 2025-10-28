@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace AventuraGUI
+namespace Aventura.View
 {
     /// <summary>
     /// Lógica de interacción para App.xaml

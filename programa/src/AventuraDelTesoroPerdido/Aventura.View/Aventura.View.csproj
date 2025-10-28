@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{C1008814-3C9F-4E52-BFA2-0685F665E60E}</ProjectGuid>
+    <ProjectGuid>{2128D3EE-4FB1-4897-B124-DF0E9DC37205}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>AventuraGUI</RootNamespace>
-    <AssemblyName>AventuraGUI</AssemblyName>
+    <RootNamespace>Aventura.View</RootNamespace>
+    <AssemblyName>Aventura.View</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -93,6 +93,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Aventura.Controlador\Aventura.Controller.csproj">
+      <Project>{a67bfca2-b8f2-4dd7-9cf5-7ad0b5a868ee}</Project>
+      <Name>Aventura.Controller</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Aventura.Model\Aventura.Model.csproj">
+      <Project>{39b9f6e4-810d-4cca-8446-626844f3230b}</Project>
+      <Name>Aventura.Model</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

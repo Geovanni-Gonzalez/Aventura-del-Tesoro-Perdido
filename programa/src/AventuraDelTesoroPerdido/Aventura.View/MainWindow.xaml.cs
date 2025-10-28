@@ -13,16 +13,25 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace AventuraGUI
+using Aventura.Controller;
+
+namespace Aventura.View
 {
-    /// <summary>
-    /// Lógica de interacción para MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
+        private GameController controller;
+
         public MainWindow()
         {
             InitializeComponent();
+            controller = new GameController();
+            lblInfo.Content = controller.GetPlayerInfo();
+        }
+
+        private void BtnAddPoints_Click(object sender, RoutedEventArgs e)
+        {
+            controller.AddPoints(10);
+            lblInfo.Content = controller.GetPlayerInfo();
         }
     }
 }

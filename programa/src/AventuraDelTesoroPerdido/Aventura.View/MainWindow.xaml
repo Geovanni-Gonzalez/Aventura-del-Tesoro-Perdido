@@ -1,0 +1,10 @@
+﻿<Window x:Class="Aventura.View.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Aventura del Tesoro Perdido" Height="250" Width="400">
+    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+        <Label x:Name="lblInfo" FontSize="16" HorizontalAlignment="Center"/>
+        <Button x:Name="btnAddPoints" Content="Agregar 10 puntos" Click="BtnAddPoints_Click"
+                Margin="10" Padding="5"/>
+    </StackPanel>
+</Window>

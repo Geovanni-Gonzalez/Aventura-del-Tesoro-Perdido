@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace AventuraGUI.Properties
+namespace Aventura.View.Properties
 {
 
 
