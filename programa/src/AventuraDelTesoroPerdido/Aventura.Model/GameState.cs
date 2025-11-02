@@ -15,7 +15,7 @@ namespace Aventura.Model
         {
             PlayerName = "Explorador";
             Score = 0;
-            CurrentLocation = "bosque"; // Estado inicial según Prolog
+            CurrentLocation = "bosque";
             Inventory = new List<string>();
             VisitedLocations = new List<string> { CurrentLocation };
         }
@@ -35,6 +35,7 @@ namespace Aventura.Model
             if (!VisitedLocations.Contains(location))
                 VisitedLocations.Add(location);
         }
+
 
         public string InventoryAsString()
         {

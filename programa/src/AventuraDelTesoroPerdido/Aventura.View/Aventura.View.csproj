@@ -90,6 +90,13 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <Resource Include="Assets\Personaje\mario1.png" />
+    <Resource Include="Assets\Personaje\mario2.png" />
+    <Resource Include="Assets\Personaje\mario3.png" />
+    <Resource Include="Assets\Lugar\default.jpeg" />
+    <Content Include="ServidorProlog.pl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -106,6 +113,9 @@
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Assets\Objeto\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
