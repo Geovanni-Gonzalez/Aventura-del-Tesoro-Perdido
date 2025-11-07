@@ -2,7 +2,7 @@
 % ------------------------------------------------
 
 % --- 1. Carga la base de conocimiento (el mundo) ---
-:- consult('base_conocimiento.pl').
+:- consult('baseDeConocimiento.pl').
 
 % --- 2. Carga el estado inicial y dinamico ---
 :- consult('estado.pl').
