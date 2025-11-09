@@ -87,10 +87,10 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="BaseDeConocimiento.pl">
+    <None Include="PrologFiles\BaseDeConocimiento.pl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Estado.pl">
+    <None Include="PrologFiles\Estado.pl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
@@ -98,14 +98,14 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <None Include="Reglas.pl">
+    <None Include="PrologFiles\Reglas.pl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Resource Include="Assets\Personaje\mario1.png" />
     <Resource Include="Assets\Personaje\mario2.png" />
     <Resource Include="Assets\Personaje\mario3.png" />
     <Resource Include="Assets\Lugar\default.jpeg" />
-    <Content Include="ServidorProlog.pl">
+    <Content Include="PrologFiles\ServidorProlog.pl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

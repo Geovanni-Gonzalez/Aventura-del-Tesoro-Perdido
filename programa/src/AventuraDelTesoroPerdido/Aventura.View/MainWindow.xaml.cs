@@ -13,10 +13,12 @@ namespace Aventura.View
     public partial class MainWindow : Window
     {
         private readonly GameController controller;
+
         private readonly Dictionary<string, Button> placeButtons = new Dictionary<string, Button>();
         private double personajeX = 0;
         private const double buttonSpacing = 160;
         private const double startX = 50;
+
 
         public MainWindow()
         {
@@ -45,12 +47,11 @@ namespace Aventura.View
                 PersonajeImg.Source = new BitmapImage(new Uri(spritePath));
             }
 
-            // Suscribirse a actualizaciones del estado
-            controller.OnGameStateUpdated += GameController_OnGameStateUpdated;
+        
 
             // Inicializar interfaz
             RefreshLugares();
-            PositionCharacterAt(controller.gameState.CurrentLocation);
+        
         }
 
         // --- EVENTOS UI ---------------------------------------------------
