@@ -31,9 +31,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="SwiPlCs, Version=1.1.5990.0, Culture=neutral, PublicKeyToken=03ea137181587c56, processorArchitecture=MSIL">
-      <HintPath>..\packages\SWI.Prolog.1.1.5990\lib\net35\SwiPlCs.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

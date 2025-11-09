@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
+
 namespace Aventura.Model
 {
     public class GameState
@@ -18,6 +19,7 @@ namespace Aventura.Model
             CurrentLocation = "bosque";
             Inventory = new List<string>();
             VisitedLocations = new List<string> { CurrentLocation };
+            
         }
 
         public void AddToInventory(string item)
