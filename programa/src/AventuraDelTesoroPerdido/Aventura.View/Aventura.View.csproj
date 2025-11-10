@@ -128,5 +128,16 @@
   <ItemGroup>
     <Folder Include="Assets\Objeto\" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="PrologFiles\BaseDeConocimiento.pl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="PrologFiles\Estado.pl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="PrologFiles\Reglas.pl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

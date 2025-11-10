@@ -34,7 +34,8 @@ namespace Aventura.Controller
         {
             if (!motorIniciado)
             {
-                string baseDir = Path.Combine(Directory.GetCurrentDirectory(), "PrologFiles");
+                //C:\Users\geova\Github Desktop Repos\Aventura-del-Tesoro-Perdido\programa\src\AventuraDelTesoroPerdido\Aventura.View\PrologFiles
+                string baseDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "PrologFiles");
 
                 string[] parametros = { "-q", "-f", "none" };
                 PlEngine.Initialize(parametros);
