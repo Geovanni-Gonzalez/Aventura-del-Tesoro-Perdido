@@ -1,10 +1,10 @@
 ﻿using Aventura.Controller;
 using Aventura.Model;
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 
-// Asegúrate de que el namespace coincide con el de tu proyecto de Vista/UI
 namespace Aventura.View
 {
     public partial class MainWindow : Window
@@ -14,19 +14,13 @@ namespace Aventura.View
         public MainWindow()
         {
             InitializeComponent();
-
             gameController = new GameController();
-
-            // Suscribirse al evento de actualización de estado
             gameController.OnGameStateUpdated += ActualizarUI_OnGameStateUpdated;
 
-            // Inicializar el motor y cargar el estado inicial
             try
             {
                 gameController.InicializarMotor();
                 gameController.ActualizarEstado();
-
-                // Actualizar la UI con el estado inicial
                 ActualizarUI(gameController.Estado);
                 MostrarMensaje("Motor Prolog inicializado. ¡Comienza la aventura!");
             }
@@ -35,132 +29,227 @@ namespace Aventura.View
                 string errorMsg = $"Error crítico al inicializar el motor Prolog. " +
                                   $"Asegúrate de que los archivos .pl estén en la carpeta 'PrologFiles'.\n\n" +
                                   $"Detalle: {ex.Message}";
-
                 MostrarMensaje(errorMsg);
                 MessageBox.Show(errorMsg, "Error de Inicialización", MessageBoxButton.OK, MessageBoxImage.Error);
-
-                // --- ERRORES ELIMINADOS ---
-                // Se eliminaron las referencias a botones que no existen
-                // (btnMover, btnTomar, btnUsar, txtObjetoTomar)
             }
         }
 
-        // --- MANEJO DEL ESTADO DE LA VENTANA ---
-
-        // Esta función AHORA SÍ se conecta con el XAML
         private void Window_Closed(object sender, EventArgs e)
         {
-            // Limpiar el motor de Prolog al cerrar la aplicación
             gameController?.FinalizarMotor();
         }
 
-        // --- ACTUALIZACIÓN DE LA UI ---
-
-        // Event handler que se llama cuando el GameController notifica un cambio
         private void ActualizarUI_OnGameStateUpdated(GameState estado)
         {
-            // El evento puede venir de otro hilo, usamos Dispatcher para asegurar
-            // que la actualización de la UI ocurra en el hilo principal.
-            Dispatcher.Invoke(() =>
-            {
-                ActualizarUI(estado);
-            });
+            Dispatcher.Invoke(() => ActualizarUI(estado));
         }
 
-        // Método helper principal para actualizar los controles de la UI
-        // --- CORREGIDO ---
         private void ActualizarUI(GameState estado)
         {
             if (estado == null) return;
 
-            // Actualizar barra de estado (Usa el control 'EstadoTxt' que SÍ existe en el XAML)
             string inventarioStr = (estado.Inventory != null && estado.Inventory.Count > 0)
                                     ? string.Join(", ", estado.Inventory)
                                     : "(Vacío)";
-
-            // Actualiza el TextBlock 'EstadoTxt' de la barra superior
             EstadoTxt.Text = $"Lugar: {estado.CurrentPlace ?? "Desconocido"} | Inventario: {inventarioStr}";
 
-            // TODO: (Próximos pasos)
-            // Aquí deberás actualizar la posición de 'PersonajeImg' en el Canvas
-            // y generar los botones de movimiento en 'LugarButtonsPanel'
-            // basado en 'estado.AvailablePlaces'.
 
-            // Se eliminó el código que actualizaba 'lblLugarActual', 'lstInventario' y 'lstLugares'
-            // porque esos controles no existen en tu MainWindow.xaml
-        }
-
-        // Método helper para añadir mensajes a la consola del juego
-        // --- CORREGIDO ---
-        private void MostrarMensaje(string mensaje)
-        {
-            // Evitar mensajes vacíos o de placeholder
-            if (!string.IsNullOrEmpty(mensaje) && !mensaje.Equals("(Sin mensaje)"))
+            LstInventario.ItemsSource = null;
+            if (estado.Inventory != null && estado.Inventory.Count > 0)
             {
-                // -- IMPORTANTE --
-                // Tu XAML no tiene un TextBox llamado 'txtMensajes'.
-                // Para solucionarlo, debes añadir un control <TextBox x:Name="txtMensajes"> a tu XAML.
-                //
-                // Como solución temporal, usamos un MessageBox:
-                MessageBox.Show(mensaje);
+                LstInventario.ItemsSource = estado.Inventory;
             }
         }
 
-        // --- MANEJADORES DE EVENTOS DE BOTONES (NUEVOS) ---
-        // Estos son los métodos que tu XAML SÍ está buscando
+        private void MostrarMensaje(string mensaje)
+        {
+            if (!string.IsNullOrEmpty(mensaje) && !mensaje.Equals("(Sin mensaje)"))
+            {
+                MessageBox.Show(mensaje, "Información del Juego");
+            }
+        }
+
+        private void CmbMover_DropDownOpened(object sender, EventArgs e)
+        {
+            gameController.ActualizarEstado();
+            CmbMover.ItemsSource = gameController.Estado.AvailablePlaces;
+        }
+
+        private void CmbMover_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // No hacemos nada aquí, la acción la dispara el botón "Mover".
+        }
+
+        private void CmbTomar_DropDownOpened(object sender, EventArgs e)
+        {
+            // Rellena el ComboBox con los objetos en el lugar actual
+            gameController.ActualizarEstado(); // Asegura que la lista esté al día
+            CmbTomar.ItemsSource = gameController.Estado.AvailableObjects;
+        }
+
+        private void CmbTomar_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // No hacemos nada aquí, la acción la dispara el botón "Tomar".
+        }
+
+        private void CmbUsar_DropDownOpened(object sender, EventArgs e)
+        {
+            // Rellena el ComboBox con los objetos del inventario
+            gameController.ActualizarEstado(); // Asegura que la lista esté al día
+            CmbUsar.ItemsSource = gameController.Estado.Inventory;
+        }
+
+        private void CmbUsar_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // No hacemos nada aquí, la acción la dispara el botón "Usar".
+        }
+
+        // --- BOTONES DE ACCIÓN (PANEL IZQUIERDO) ---
+
+        // Esta función ahora SÍ está conectada al botón "Mover"
+        private void BtnMover_Click(object sender, RoutedEventArgs e)
+        {
+            string destino = CmbMover.SelectedItem as string;
+            if (!string.IsNullOrEmpty(destino))
+            {
+                string mensaje = gameController.MoverA(destino);
+                MostrarMensaje(mensaje);
+                CmbMover.SelectedIndex = -1; // Limpia la selección
+                CmbMover.ItemsSource = null; // Limpia la lista para forzar recarga
+            }
+            else
+            {
+                MostrarMensaje("Por favor, selecciona un destino del ComboBox 'Mover a:'.");
+            }
+        }
+
+        // Esta función ahora SÍ está conectada al botón "Tomar"
+        private void BtnTomar_Click(object sender, RoutedEventArgs e)
+        {
+            string objeto = CmbTomar.SelectedItem as string;
+            if (!string.IsNullOrEmpty(objeto))
+            {
+                string mensaje = gameController.Tomar(objeto);
+                MostrarMensaje(mensaje);
+                CmbTomar.SelectedIndex = -1; // Limpia la selección
+                CmbTomar.ItemsSource = null; // Limpia la lista para forzar recarga
+            }
+            else
+            {
+                MostrarMensaje("Por favor, selecciona un objeto del ComboBox 'Tomar objeto:'.");
+            }
+        }
+
+        // Esta función ahora SÍ está conectada al botón "Usar"
+        private void BtnUsar_Click(object sender, RoutedEventArgs e)
+        {
+            string objeto = CmbUsar.SelectedItem as string;
+            if (!string.IsNullOrEmpty(objeto))
+            {
+                string mensaje = gameController.Usar(objeto);
+                MostrarMensaje(mensaje);
+                CmbUsar.SelectedIndex = -1; // Limpia la selección
+                CmbUsar.ItemsSource = null; // Limpia la lista para forzar recarga
+            }
+            else
+            {
+                MostrarMensaje("Por favor, selecciona un objeto del ComboBox 'Usar objeto'.");
+            }
+        }
+
+        // --- OTROS BOTONES (PANEL IZQUIERDO) ---
 
         private void BtnRefrescar_Click(object sender, RoutedEventArgs e)
         {
             gameController.ActualizarEstado();
-            gameController.NotifyStateChanged(); // Forzamos la actualización de la UI
+            gameController.NotifyStateChanged();
             MostrarMensaje("Estado actualizado.");
-        }
-
-        private void BtnInventario_Click(object sender, RoutedEventArgs e)
-        {
-            string inventarioStr = (gameController.Estado.Inventory != null && gameController.Estado.Inventory.Count > 0)
-                                    ? string.Join(", ", gameController.Estado.Inventory)
-                                    : "(Vacío)";
-            MostrarMensaje($"Inventario: {inventarioStr}");
-        }
-
-        private void BtnObjetosLugar_Click(object sender, RoutedEventArgs e)
-        {
-            // TODO: Necesitas una función en tu GameController que te diga
-            // qué objetos hay en el 'gameController.Estado.CurrentPlace'
-            MostrarMensaje("Función 'Objetos en Lugar' no implementada.");
-        }
-
-        private void BtnUsarObjeto_Click(object sender, RoutedEventArgs e)
-        {
-            // TODO: Necesitas una forma de seleccionar qué objeto usar
-            // (quizás un ComboBox o un InputDialog)
-            // string objeto = ... (objeto seleccionado)
-            // if (!string.IsNullOrEmpty(objeto))
-            // {
-            //    string mensaje = gameController.Usar(objeto);
-            //    MostrarMensaje(mensaje);
-            // }
-            MostrarMensaje("Función 'Usar Objeto' no implementada.");
         }
 
         private void BtnVerificarGane_Click(object sender, RoutedEventArgs e)
         {
             // TODO: Necesitas una función 'gameController.VerificarGane()'
-            // que consulte a Prolog si se ha ganado el juego.
             MostrarMensaje("Función 'Verificar Gane' no implementada.");
         }
 
         private void BtnReiniciar_Click(object sender, RoutedEventArgs e)
         {
             // TODO: Necesitas una función 'gameController.ReiniciarJuego()'
-            // que llame a 'retractall' en Prolog y luego llame a 
-            // gameController.ActualizarEstado() y gameController.NotifyStateChanged()
             MostrarMensaje("Función 'Reiniciar' no implementada.");
         }
 
-        // --- MANEJADORES DE EVENTOS ANTIGUOS (ELIMINADOS) ---
-        // Se eliminaron BtnMover_Click, BtnTomar_Click y BtnUsar_Click
-        // porque no corresponden a los botones de tu XAML actual.
+        // --- MANEJADORES DE LA BARRA INFERIOR ---
+        // (Estas funciones faltaban y causaban los errores de la captura)
+
+        private void BtnDondeEstoy_Click(object sender, RoutedEventArgs e)
+        {
+            MostrarMensaje($"Actualmente estás en: {gameController.Estado.CurrentPlace}");
+        }
+
+        private void BtnQueTengo_Click(object sender, RoutedEventArgs e)
+        {
+            string inventarioStr = (gameController.Estado.Inventory != null && gameController.Estado.Inventory.Count > 0)
+                                    ? string.Join(", ", gameController.Estado.Inventory)
+                                    : "(Inventario vacío)";
+            MostrarMensaje($"Tienes: {inventarioStr}");
+        }
+
+        private void BtnLugaresVisitados_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> visitados = gameController.ObtenerLugaresVisitados();
+            string visitadosStr = (visitados != null && visitados.Count > 0)
+                                  ? string.Join(", ", visitados)
+                                  : "Aún no has visitado ningún lugar.";
+            MostrarMensaje($"Lugares Visitados: {visitadosStr}");
+        }
+
+        // --- COMBOBOX "Donde Esta" (BARRA INFERIOR) ---
+
+        // Corregido de "DropUpOpened" a "DropDownOpened"
+        private void CmbDondeEsta_DropDownOpened(object sender, EventArgs e)
+        {
+            // Rellena la lista de TODOS los objetos del juego
+            if (CmbDondeEsta.Items.Count == 0)
+            {
+                List<string> todosObjetos = gameController.ObtenerTodosLosObjetos();
+                if (todosObjetos != null && todosObjetos.Count > 0)
+                {
+                    CmbDondeEsta.ItemsSource = todosObjetos;
+                }
+            }
+        }
+
+        private void CmbDondeEsta_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (CmbDondeEsta.SelectedItem is string objetoSeleccionado)
+            {
+                string ubicacion = gameController.UbicacionDe(objetoSeleccionado);
+                MostrarMensaje(ubicacion);
+                CmbDondeEsta.SelectedIndex = -1; // Limpia para permitir seleccionar de nuevo
+            }
+        }
+
+        // --- COMBOBOX "Puedo Ir A" (BARRA INFERIOR) ---
+
+        // Evento NUEVO (estaba mal en tu XAML)
+        private void CmbPuedoIr_DropDownOpened(object sender, EventArgs e)
+        {
+            // Rellena con los lugares disponibles
+            gameController.ActualizarEstado(); // Asegura que la lista esté al día
+            CmbPuedoIr.ItemsSource = gameController.Estado.AvailablePlaces;
+        }
+
+        // Evento NUEVO (estaba mal en tu XAML)
+        private void CmbPuedoIr_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Mueve al jugador al lugar seleccionado
+            if (CmbPuedoIr.SelectedItem is string destino)
+            {
+                string mensaje = gameController.MoverA(destino);
+                MostrarMensaje(mensaje);
+                CmbPuedoIr.SelectedIndex = -1; // Limpia la selección
+                CmbPuedoIr.ItemsSource = null; // Limpia la lista para forzar recarga
+            }
+        }
     }
 }

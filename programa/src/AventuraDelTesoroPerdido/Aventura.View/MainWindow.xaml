@@ -12,7 +12,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+        </Grid.RowDefinitions>
 
         <Border Grid.Row="0"
                 Background="#2A2A40"
@@ -29,7 +29,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+            </Grid.ColumnDefinitions>
 
             <Border Grid.Column="0"
                     Width="180"
@@ -44,7 +44,6 @@
                                Foreground="#FFD700"
                                Margin="50,0,40,10"/>
 
-                    <!-- ComboBox para Mover -->
                     <Label Content="Mover a:"
                            Foreground="White"
                            Margin="0,5,0,0"/>
@@ -52,8 +51,9 @@
                               Margin="0,0,0,5"
                               DropDownOpened="CmbMover_DropDownOpened"
                               SelectionChanged="CmbMover_SelectionChanged"/>
+
                     <Button Content="Mover"
-                            Click="BtnReiniciar_Click"
+                            Click="BtnMover_Click" 
                             Margin="0,0,0,15"
                             Background="#2E2E73"
                             Foreground="White">
@@ -62,41 +62,31 @@
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="Button">
-                                            <!-- Usamos un Border como contenedor principal -->
                                             <Border x:Name="border"
                                                     Background="{TemplateBinding Background}"
                                                     BorderBrush="{TemplateBinding BorderBrush}"
                                                     BorderThickness="{TemplateBinding BorderThickness}"
                                                     CornerRadius="7">
-                                                <!-- ^^^ ¡AQUÍ ESTÁ EL RADIO! (Puedes cambiar 15) -->
-
                                                 <ContentPresenter HorizontalAlignment="Center"
                                                                   VerticalAlignment="Center"
                                                                   TextElement.Foreground="{TemplateBinding Foreground}"/>
                                             </Border>
-
                                             <ControlTemplate.Triggers>
-                                                <!-- Efecto al pasar el mouse por encima -->
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="border" Property="Background" Value="#FF6666"/>
-                                                    <!-- Rojo más claro -->
+                                                    <Setter TargetName="border" Property="Background" Value="#5272FF"/>
                                                 </Trigger>
-                                                <!-- Efecto al presionar -->
                                                 <Trigger Property="IsPressed" Value="True">
-                                                    <Setter TargetName="border" Property="Background" Value="#CC0000"/>
-                                                    <!-- Rojo más oscuro -->
+                                                    <Setter TargetName="border" Property="Background" Value="#000B6B"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
                                     </Setter.Value>
                                 </Setter>
-                                <!-- Damos un alto fijo para que se vea bien redondo -->
                                 <Setter Property="Height" Value="25"/>
                             </Style>
                         </Button.Resources>
                     </Button>
 
-                    <!-- ComboBox para Tomar -->
                     <Label Content="Tomar objeto:"
                            Foreground="White"
                            Margin="0,5,0,0"/>
@@ -104,60 +94,9 @@
                               Margin="0,0,0,5"
                               DropDownOpened="CmbTomar_DropDownOpened"
                     		  SelectionChanged="CmbTomar_SelectionChanged"/>
+
                     <Button Content="Tomar"
-                                Click="BtnReiniciar_Click"
-                                Margin="0,0,0,15"
-                                Background="#2E2E73"
-                                Foreground="White">
-                        <Button.Resources>
-                            <Style TargetType="Button">
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="Button">
-                                            <!-- Usamos un Border como contenedor principal -->
-                                            <Border x:Name="border"
-                                                    Background="{TemplateBinding Background}"
-                                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                                    CornerRadius="7">
-                                                <!-- ^^^ ¡AQUÍ ESTÁ EL RADIO! (Puedes cambiar 15) -->
-
-                                                <ContentPresenter HorizontalAlignment="Center"
-                                                                  VerticalAlignment="Center"
-                                                                  TextElement.Foreground="{TemplateBinding Foreground}"/>
-                                            </Border>
-
-                                            <ControlTemplate.Triggers>
-                                                <!-- Efecto al pasar el mouse por encima -->
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="border" Property="Background" Value="#FF6666"/>
-                                                    <!-- Rojo más claro -->
-                                                </Trigger>
-                                                <!-- Efecto al presionar -->
-                                                <Trigger Property="IsPressed" Value="True">
-                                                    <Setter TargetName="border" Property="Background" Value="#CC0000"/>
-                                                    <!-- Rojo más oscuro -->
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                                <!-- Damos un alto fijo para que se vea bien redondo -->
-                                <Setter Property="Height" Value="25"/>
-                            </Style>
-                        </Button.Resources>
-                    </Button>
-
-                    <!-- ComboBox para Usar-->
-                    <Label Content="Usar objeto (Inventario):"
-                           Foreground="White"
-                           Margin="0,5,0,0"/>
-                    <ComboBox x:Name="CmbUsar"
-                              Margin="0,0,0,5"
-                              DropDownOpened="CmbUsar_DropDownOpened"
-                              SelectionChanged="CmbUsar_SelectionChanged"/>
-                    <Button Content="Usar"
-                            Click="BtnReiniciar_Click"
+                            Click="BtnTomar_Click" 
                             Margin="0,0,0,15"
                             Background="#2E2E73"
                             Foreground="White">
@@ -166,41 +105,74 @@
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="Button">
-                                            <!-- Usamos un Border como contenedor principal -->
                                             <Border x:Name="border"
                                                     Background="{TemplateBinding Background}"
                                                     BorderBrush="{TemplateBinding BorderBrush}"
                                                     BorderThickness="{TemplateBinding BorderThickness}"
                                                     CornerRadius="7">
-                                                <!-- ^^^ ¡AQUÍ ESTÁ EL RADIO! (Puedes cambiar 15) -->
-
                                                 <ContentPresenter HorizontalAlignment="Center"
                                                                   VerticalAlignment="Center"
                                                                   TextElement.Foreground="{TemplateBinding Foreground}"/>
                                             </Border>
-
                                             <ControlTemplate.Triggers>
-                                                <!-- Efecto al pasar el mouse por encima -->
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="border" Property="Background" Value="#FF6666"/>
-                                                    <!-- Rojo más claro -->
+                                                    <Setter TargetName="border" Property="Background" Value="#5272FF"/>
                                                 </Trigger>
-                                                <!-- Efecto al presionar -->
                                                 <Trigger Property="IsPressed" Value="True">
-                                                    <Setter TargetName="border" Property="Background" Value="#CC0000"/>
-                                                    <!-- Rojo más oscuro -->
+                                                    <Setter TargetName="border" Property="Background" Value="#000B6B"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
                                     </Setter.Value>
                                 </Setter>
-                                <!-- Damos un alto fijo para que se vea bien redondo -->
                                 <Setter Property="Height" Value="25"/>
                             </Style>
                         </Button.Resources>
                     </Button>
 
-                    <!-- Botones restantes -->
+                    <Label Content="Usar objeto (Inventario):"
+                           Foreground="White"
+                           Margin="0,5,0,0"/>
+                    <ComboBox x:Name="CmbUsar"
+                              Margin="0,0,0,5"
+                              DropDownOpened="CmbUsar_DropDownOpened"
+                              SelectionChanged="CmbUsar_SelectionChanged"/>
+
+                    <Button Content="Usar"
+                            Click="BtnUsar_Click" 
+                            Margin="0,0,0,15"
+                            Background="#2E2E73"
+                            Foreground="White">
+                        <Button.Resources>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="border"
+                                                    Background="{TemplateBinding Background}"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                    CornerRadius="7">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"
+                                                                  TextElement.Foreground="{TemplateBinding Foreground}"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="border" Property="Background" Value="#5272FF"/>
+                                                </Trigger>
+                                                <Trigger Property="IsPressed" Value="True">
+                                                    <Setter TargetName="border" Property="Background" Value="#000B6B"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter Property="Height" Value="25"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+
                     <Button Content="Refrescar"
                             Click="BtnRefrescar_Click"
                             Margin="0,20,0,0"
@@ -211,35 +183,26 @@
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="Button">
-                                            <!-- Usamos un Border como contenedor principal -->
                                             <Border x:Name="border"
                                                     Background="{TemplateBinding Background}"
                                                     BorderBrush="{TemplateBinding BorderBrush}"
                                                     BorderThickness="{TemplateBinding BorderThickness}"
                                                     CornerRadius="7">
-                                                <!-- ^^^ ¡AQUÍ ESTÁ EL RADIO! (Puedes cambiar 15) -->
-
                                                 <ContentPresenter HorizontalAlignment="Center"
                                                                   VerticalAlignment="Center"
                                                                   TextElement.Foreground="{TemplateBinding Foreground}"/>
                                             </Border>
-
                                             <ControlTemplate.Triggers>
-                                                <!-- Efecto al pasar el mouse por encima -->
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="border" Property="Background" Value="#FF6666"/>
-                                                    <!-- Rojo más claro -->
+                                                    <Setter TargetName="border" Property="Background" Value="#5272FF"/>
                                                 </Trigger>
-                                                <!-- Efecto al presionar -->
                                                 <Trigger Property="IsPressed" Value="True">
-                                                    <Setter TargetName="border" Property="Background" Value="#CC0000"/>
-                                                    <!-- Rojo más oscuro -->
+                                                    <Setter TargetName="border" Property="Background" Value="#000B6B"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
                                     </Setter.Value>
                                 </Setter>
-                                <!-- Damos un alto fijo para que se vea bien redondo -->
                                 <Setter Property="Height" Value="25"/>
                             </Style>
                         </Button.Resources>
@@ -249,41 +212,32 @@
                             Click="BtnVerificarGane_Click"
                             Margin="0,5,0,0"
                             Background="#0FBF00"
-                            Foreground="White">
+                            Foreground="Black">
                         <Button.Resources>
                             <Style TargetType="Button">
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="Button">
-                                            <!-- Usamos un Border como contenedor principal -->
                                             <Border x:Name="border"
-                                                        Background="{TemplateBinding Background}"
-                                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                                        CornerRadius="7">
-                                                <!-- ^^^ ¡AQUÍ ESTÁ EL RADIO! (Puedes cambiar 15) -->
-
+                                                    Background="{TemplateBinding Background}"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                    CornerRadius="7">
                                                 <ContentPresenter HorizontalAlignment="Center"
                                                                   VerticalAlignment="Center"
                                                                   TextElement.Foreground="{TemplateBinding Foreground}"/>
                                             </Border>
-
                                             <ControlTemplate.Triggers>
-                                                <!-- Efecto al pasar el mouse por encima -->
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="border" Property="Background" Value="#FF6666"/>
-                                                    <!-- Rojo más claro -->
+                                                    <Setter TargetName="border" Property="Background" Value="#66FF52"/>
                                                 </Trigger>
-                                                <!-- Efecto al presionar -->
                                                 <Trigger Property="IsPressed" Value="True">
-                                                    <Setter TargetName="border" Property="Background" Value="#CC0000"/>
-                                                    <!-- Rojo más oscuro -->
+                                                    <Setter TargetName="border" Property="Background" Value="#045400"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
                                     </Setter.Value>
                                 </Setter>
-                                <!-- Damos un alto fijo para que se vea bien redondo -->
                                 <Setter Property="Height" Value="25"/>
                             </Style>
                         </Button.Resources>
@@ -300,35 +254,26 @@
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="Button">
-                                            <!-- Usamos un Border como contenedor principal -->
                                             <Border x:Name="border"
-                                                        Background="{TemplateBinding Background}"
-                                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                                        CornerRadius="7">
-                                                <!-- ^^^ ¡AQUÍ ESTÁ EL RADIO! (Puedes cambiar 15) -->
-
+                                                    Background="{TemplateBinding Background}"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                    CornerRadius="7">
                                                 <ContentPresenter HorizontalAlignment="Center"
-                                                                      VerticalAlignment="Center"
-                                                                      TextElement.Foreground="{TemplateBinding Foreground}"/>
+                                                                  VerticalAlignment="Center"
+                                                                  TextElement.Foreground="{TemplateBinding Foreground}"/>
                                             </Border>
-
                                             <ControlTemplate.Triggers>
-                                                <!-- Efecto al pasar el mouse por encima -->
                                                 <Trigger Property="IsMouseOver" Value="True">
                                                     <Setter TargetName="border" Property="Background" Value="#FF6666"/>
-                                                    <!-- Rojo más claro -->
                                                 </Trigger>
-                                                <!-- Efecto al presionar -->
                                                 <Trigger Property="IsPressed" Value="True">
                                                     <Setter TargetName="border" Property="Background" Value="#CC0000"/>
-                                                    <!-- Rojo más oscuro -->
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
                                     </Setter.Value>
                                 </Setter>
-                                <!-- Damos un alto fijo para que se vea bien redondo -->
                                 <Setter Property="Height" Value="25"/>
                             </Style>
                         </Button.Resources>
@@ -354,7 +299,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
+                    </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0"
                                Text="Mapa de la Aventura"
@@ -381,7 +326,7 @@
                 </Grid>
             </Border>
         </Grid>
-        
+
         <Border Grid.Row="2"
                 Background="#2A2A40"
                 CornerRadius="10"
@@ -402,35 +347,26 @@
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="Button">
-                                        <!-- Usamos un Border como contenedor principal -->
                                         <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="7">
-                                            <!-- ^^^ ¡AQUÍ ESTÁ EL RADIO! (Puedes cambiar 15) -->
-
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="7">
                                             <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"
-                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
+                                                              VerticalAlignment="Center"
+                                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
                                         </Border>
-
                                         <ControlTemplate.Triggers>
-                                            <!-- Efecto al pasar el mouse por encima -->
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="border" Property="Background" Value="#FF6666"/>
-                                                <!-- Rojo más claro -->
+                                                <Setter TargetName="border" Property="Background" Value="#5272FF"/>
                                             </Trigger>
-                                            <!-- Efecto al presionar -->
                                             <Trigger Property="IsPressed" Value="True">
-                                                <Setter TargetName="border" Property="Background" Value="#CC0000"/>
-                                                <!-- Rojo más oscuro -->
+                                                <Setter TargetName="border" Property="Background" Value="#000B6B"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
                                 </Setter.Value>
                             </Setter>
-                            <!-- Damos un alto fijo para que se vea bien redondo -->
                             <Setter Property="Height" Value="25"/>
                         </Style>
                     </Button.Resources>
@@ -448,35 +384,26 @@
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="Button">
-                                        <!-- Usamos un Border como contenedor principal -->
                                         <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="7">
-                                            <!-- ^^^ ¡AQUÍ ESTÁ EL RADIO! (Puedes cambiar 15) -->
-
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="7">
                                             <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"
-                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
+                                                              VerticalAlignment="Center"
+                                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
                                         </Border>
-
                                         <ControlTemplate.Triggers>
-                                            <!-- Efecto al pasar el mouse por encima -->
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="border" Property="Background" Value="#FF6666"/>
-                                                <!-- Rojo más claro -->
+                                                <Setter TargetName="border" Property="Background" Value="#5272FF"/>
                                             </Trigger>
-                                            <!-- Efecto al presionar -->
                                             <Trigger Property="IsPressed" Value="True">
-                                                <Setter TargetName="border" Property="Background" Value="#CC0000"/>
-                                                <!-- Rojo más oscuro -->
+                                                <Setter TargetName="border" Property="Background" Value="#000B6B"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
                                 </Setter.Value>
                             </Setter>
-                            <!-- Damos un alto fijo para que se vea bien redondo -->
                             <Setter Property="Height" Value="25"/>
                         </Style>
                     </Button.Resources>
@@ -494,35 +421,26 @@
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="Button">
-                                        <!-- Usamos un Border como contenedor principal -->
                                         <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="7">
-                                            <!-- ^^^ ¡AQUÍ ESTÁ EL RADIO! (Puedes cambiar 15) -->
-
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="7">
                                             <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"
-                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
+                                                              VerticalAlignment="Center"
+                                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
                                         </Border>
-
                                         <ControlTemplate.Triggers>
-                                            <!-- Efecto al pasar el mouse por encima -->
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="border" Property="Background" Value="#FF6666"/>
-                                                <!-- Rojo más claro -->
+                                                <Setter TargetName="border" Property="Background" Value="#5272FF"/>
                                             </Trigger>
-                                            <!-- Efecto al presionar -->
                                             <Trigger Property="IsPressed" Value="True">
-                                                <Setter TargetName="border" Property="Background" Value="#CC0000"/>
-                                                <!-- Rojo más oscuro -->
+                                                <Setter TargetName="border" Property="Background" Value="#000B6B"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
                                 </Setter.Value>
                             </Setter>
-                            <!-- Damos un alto fijo para que se vea bien redondo -->
                             <Setter Property="Height" Value="25"/>
                         </Style>
                     </Button.Resources>
@@ -535,22 +453,21 @@
 
                 <ComboBox x:Name="CmbDondeEsta"
                           Width="150"
-                          DropDownOpened="CmbDondeEsta_DropUpOpened"
+                          DropDownOpened="CmbDondeEsta_DropDownOpened" 
                           SelectionChanged="CmbDondeEsta_SelectionChanged"/>
 
                 <Label Content="Puedo Ir A:"
                        VerticalAlignment="Center"
                        Foreground="White"
                        Margin="15,0,5,0"/>
-                
+
                 <ComboBox x:Name="CmbPuedoIr"
                           Width="150"
-                          DropDownOpened="CmbDondeEsta_DropUpOpened"
-                          SelectionChanged="CmbDondeEsta_SelectionChanged"
+                          DropDownOpened="CmbPuedoIr_DropDownOpened" 
+                          SelectionChanged="CmbPuedoIr_SelectionChanged" 
                           Margin="15,0,5,0"/>
 
             </StackPanel>
         </Border>
-        
     </Grid>
 </Window>
