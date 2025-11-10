@@ -1,226 +1,167 @@
-﻿using System;
+﻿using Aventura.Controller;
+using Aventura.Model;
+using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
-using Aventura.Controller;
 
 namespace Aventura.View
 {
     public partial class MainWindow : Window
     {
-        private readonly GameController controller;
-
-        private readonly Dictionary<string, Button> placeButtons = new Dictionary<string, Button>();
-        private double personajeX = 0;
-        private const double buttonSpacing = 160;
-        private const double startX = 50;
-
+        private readonly GameController gameController;
 
         public MainWindow()
         {
             InitializeComponent();
 
+            gameController = new GameController();
+            gameController.OnGameStateUpdated += ActualizarUI_OnGameStateUpdated;
+
+            // Iniciar carga asíncrona al iniciar la ventana
+            Loaded += async (s, e) => await InicializarAsync();
+        }
+
+        // Inicializa el sistema de juego de manera asíncrona
+        private async Task InicializarAsync()
+        {
             try
             {
-                controller = new GameController();
+                MostrarMensaje("Inicializando conexión con Prolog...");
+
+                // Probar conexión al servidor
+                await gameController.ActualizarEstadoAsync();
+
+                MostrarMensaje("✅ Conexión establecida. ¡Comienza la aventura!");
+                ActualizarUI(gameController.Estado);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al iniciar GameController: " + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                Close();
-                return;
-            }
+                string errorMsg = $"❌ Error al conectar con el servidor Prolog.\n\n" +
+                                  $"Asegúrate de haberlo iniciado con:\n" +
+                                  $"swipl ServidorProlog.pl, luego ?- server(5000).\n\n" +
+                                  $"Detalle: {ex.Message}";
 
-            // Cargar imagen del personaje
-            string spritePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Personaje", "explorador.png");
-            if (!File.Exists(spritePath))
-            {
-                PersonajeImg.Source = null;
+                MostrarMensaje(errorMsg);
+                MessageBox.Show(errorMsg, "Error de conexión", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            else
-            {
-                PersonajeImg.Source = new BitmapImage(new Uri(spritePath));
-            }
-
-        
-
-            // Inicializar interfaz
-            RefreshLugares();
-        
         }
 
-        // --- EVENTOS UI ---------------------------------------------------
-
-        private void BtnRefrescar_Click(object sender, RoutedEventArgs e)
+        // --- Limpieza ---
+        private void Window_Closed(object sender, EventArgs e)
         {
-            RefreshLugares();
+            // No es necesario limpiar motor, ya que es HTTP.
+        }
+
+        // --- Actualización de UI ---
+        private void ActualizarUI_OnGameStateUpdated(GameState estado)
+        {
+            Dispatcher.Invoke(() => ActualizarUI(estado));
+        }
+
+        private void ActualizarUI(GameState estado)
+        {
+            if (estado == null) return;
+
+            string inventarioStr = (estado.Inventory != null && estado.Inventory.Count > 0)
+                ? string.Join(", ", estado.Inventory)
+                : "(Vacío)";
+
+            EstadoTxt.Text = $"📍 Lugar: {estado.CurrentPlace ?? "Desconocido"} | 🎒 Inventario: {inventarioStr}";
+        }
+
+        private void MostrarMensaje(string mensaje)
+        {
+            if (!string.IsNullOrEmpty(mensaje) && !mensaje.Equals("(Sin mensaje)"))
+            {
+                MessageBox.Show(mensaje);
+            }
+        }
+
+        // --- EVENTOS DE BOTONES ---
+        private async void BtnRefrescar_Click(object sender, RoutedEventArgs e)
+        {
+            await gameController.ActualizarEstadoAsync();
+            MostrarMensaje("🔄 Estado actualizado.");
         }
 
         private void BtnInventario_Click(object sender, RoutedEventArgs e)
         {
-            var inv = controller.GetInventory();
-            string msg = inv.Count == 0 ? "Inventario vacío." : string.Join(", ", inv);
-            MessageBox.Show(msg, "Inventario", MessageBoxButton.OK, MessageBoxImage.Information);
+            string inventarioStr = (gameController.Estado.Inventory != null && gameController.Estado.Inventory.Count > 0)
+                ? string.Join(", ", gameController.Estado.Inventory)
+                : "(Vacío)";
+            MostrarMensaje($"🎒 Inventario actual: {inventarioStr}");
         }
 
-        private void BtnObjetosLugar_Click(object sender, RoutedEventArgs e)
+        private async void BtnMover_Click(object sender, RoutedEventArgs e)
         {
-            var objs = controller.GetObjetosEnLugarActual();
-            if (objs.Count == 0)
-            {
-                MessageBox.Show("No hay objetos aquí.", "Objetos", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
+            // Ejemplo: podrías obtener el destino desde un ComboBox o un input
+            string destino = "playa"; // <- Reemplázalo por tu selección dinámica
+            var mensaje = await gameController.MoverAAsync(destino);
+            MostrarMensaje(mensaje);
+        }
 
-            var sel = ShowSelectionDialog("Objetos disponibles", objs);
-            if (!string.IsNullOrEmpty(sel))
-            {
-                string resp = controller.EjecutarComando($"tomar({sel})");
-                MessageBox.Show(resp, "Tomar objeto", MessageBoxButton.OK, MessageBoxImage.Information);
-                controller.NotifyStateChanged(); // 🔹 Notifica actualización de UI
-            }
+        private async void BtnTomar_Click(object sender, RoutedEventArgs e)
+        {
+            string objeto = "llave"; // <- Reemplázalo por tu selección dinámica
+            var mensaje = await gameController.TomarAsync(objeto);
+            MostrarMensaje(mensaje);
+        }
+
+        private async void BtnUsar_Click(object sender, RoutedEventArgs e)
+        {
+            string objeto = "llave"; // <- Reemplázalo por tu selección dinámica
+            var mensaje = await gameController.UsarAsync(objeto);
+            MostrarMensaje(mensaje);
+        }
+
+        private async void BtnLugaresVisitados_Click(object sender, RoutedEventArgs e)
+        {
+            var lugares = await gameController.ObtenerLugaresPosiblesAsync();
+            MostrarMensaje($"🌍 Lugares posibles: {string.Join(", ", lugares)}");
+        }
+
+        private void BtnQueTengo_Click(object sender, RoutedEventArgs e)
+        {
+            BtnInventario_Click(sender, e);
+        }
+
+        private void BtnDondeEstoy_Click(object sender, RoutedEventArgs e)
+        {
+            MostrarMensaje($"📍 Estás en: {gameController.Estado.CurrentPlace}");
+        }
+
+        private void BtnVerificarGane_Click(object sender, RoutedEventArgs e)
+        {
+            MostrarMensaje("Funcionalidad 'Verificar Gane' aún no implementada.");
         }
 
         private void BtnReiniciar_Click(object sender, RoutedEventArgs e)
         {
-            string resp = controller.EjecutarComando("reiniciar");
-            MessageBox.Show(resp, "Reiniciar juego", MessageBoxButton.OK, MessageBoxImage.Information);
-            controller.NotifyStateChanged();
-            PositionCharacterAt(controller.gameState.CurrentLocation);
+            MostrarMensaje("Funcionalidad 'Reiniciar' aún no implementada.");
         }
 
-        private void LugarButton_Click(object sender, RoutedEventArgs e)
+        private void CmbDondeEsta_DropDownOpened(object sender, EventArgs e)
         {
-            var btn = sender as Button;
-            if (btn == null) return;
-            string destino = (string)btn.Tag;
-
-            string resp = controller.EjecutarComando($"mover({destino})");
-            MessageBox.Show(resp, "Mover", MessageBoxButton.OK, MessageBoxImage.Information);
-
-            // Solo animar si no hay error
-            if (!string.IsNullOrEmpty(resp) && !resp.StartsWith("⚠️") && !resp.StartsWith("❌"))
-            {
-                AnimateCharacterTo(destino);
-            }
+            // TODO: Cargar dinámicamente los lugares disponibles desde gameController.Estado.AvailablePlaces
         }
 
-        // --- MÉTODOS LÓGICOS Y VISUALES -----------------------------------
-
-        private void GameController_OnGameStateUpdated(Aventura.Model.GameState gs)
+        private void CmbDondeEsta_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            Dispatcher.Invoke(() =>
-            {
-                EstadoTxt.Text = $"Jugador: {gs.PlayerName} | Lugar: {gs.CurrentLocation} | " +
-                                 $"Puntos: {gs.Score} | Inventario: {string.Join(", ", gs.Inventory)}";
-            });
+            // TODO: Acción cuando se seleccione un nuevo lugar
         }
 
-        private void RefreshLugares()
+        private void BtnObjetosLugar_Click(object sender, RoutedEventArgs e)
         {
-            LugarButtonsPanel.Children.Clear();
-            placeButtons.Clear();
-            var lugares = controller.GetLugares();
-
-            double x = startX;
-            foreach (var lugar in lugares)
-            {
-                var btn = new Button
-                {
-                    Content = lugar,
-                    Width = 120,
-                    Height = 48,
-                    Margin = new Thickness(8),
-                    Tag = lugar
-                };
-                btn.Click += LugarButton_Click;
-                LugarButtonsPanel.Children.Add(btn);
-                placeButtons[lugar] = btn;
-                x += buttonSpacing;
-            }
-
-            PositionCharacterAt(controller.gameState.CurrentLocation);
+            // Aquí puedes agregar la lógica que deseas ejecutar cuando se haga clic en el botón "Objetos en Lugar"
+            MessageBox.Show("Funcionalidad de 'Objetos en Lugar' aún no implementada.");
         }
 
-        private void PositionCharacterAt(string lugar)
+        private void BtnUsarObjeto_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(lugar))
-            {
-                Canvas.SetLeft(PersonajeImg, startX);
-                personajeX = startX;
-                return;
-            }
-
-            if (!placeButtons.ContainsKey(lugar))
-            {
-                Canvas.SetLeft(PersonajeImg, startX);
-                personajeX = startX;
-                return;
-            }
-
-            int idx = placeButtons.Keys.ToList().IndexOf(lugar);
-            double x = startX + idx * buttonSpacing;
-            Canvas.SetLeft(PersonajeImg, x);
-            personajeX = x;
-        }
-
-        private void AnimateCharacterTo(string lugar)
-        {
-            if (!placeButtons.ContainsKey(lugar)) return;
-            int idx = placeButtons.Keys.ToList().IndexOf(lugar);
-            double destinoX = startX + idx * buttonSpacing;
-
-            var anim = new DoubleAnimation
-            {
-                From = personajeX,
-                To = destinoX,
-                Duration = TimeSpan.FromSeconds(0.9),
-                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseInOut }
-            };
-
-            PersonajeImg.BeginAnimation(Canvas.LeftProperty, anim);
-            personajeX = destinoX;
-        }
-
-        // --- DIÁLOGO DE SELECCIÓN SIMPLE ----------------------------------
-
-        private string ShowSelectionDialog(string title, List<string> items)
-        {
-            var dlg = new Window
-            {
-                Title = title,
-                Width = 300,
-                Height = 300,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Owner = this
-            };
-
-            var sp = new StackPanel { Margin = new Thickness(8) };
-            var lb = new ListBox { ItemsSource = items, Height = 200 };
-            sp.Children.Add(lb);
-            var btnOk = new Button
-            {
-                Content = "OK",
-                Margin = new Thickness(0, 8, 0, 0),
-                Width = 80,
-                HorizontalAlignment = HorizontalAlignment.Center
-            };
-            sp.Children.Add(btnOk);
-            dlg.Content = sp;
-
-            string selected = null;
-            btnOk.Click += (_, __) =>
-            {
-                selected = lb.SelectedItem as string;
-                dlg.Close();
-            };
-            dlg.ShowDialog();
-            return selected;
+            // Lógica para usar un objeto, puedes personalizar según tu aplicación
+            MessageBox.Show("Funcionalidad 'Usar Objeto' aún no implementada.");
         }
     }
 }
