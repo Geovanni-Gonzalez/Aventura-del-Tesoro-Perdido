@@ -163,5 +163,77 @@ namespace Aventura.View
             // Lógica para usar un objeto, puedes personalizar según tu aplicación
             MessageBox.Show("Funcionalidad 'Usar Objeto' aún no implementada.");
         }
+
+        private void CmbMover_DropDownOpened(object sender, EventArgs e)
+        {
+            // Aquí puedes cargar dinámicamente los lugares disponibles desde gameController.Estado.AvailablePlaces
+            // Ejemplo:
+            // var comboBox = sender as ComboBox;
+            // comboBox.ItemsSource = gameController.Estado.AvailablePlaces;
+        }
+
+        private void CmbMover_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Aquí puedes agregar la lógica que deseas ejecutar cuando se seleccione un nuevo lugar en el ComboBox "CmbMover"
+            // Por ejemplo, actualizar el destino para el movimiento
+            var comboBox = sender as ComboBox;
+            if (comboBox != null && comboBox.SelectedItem != null)
+            {
+                string destinoSeleccionado = comboBox.SelectedItem.ToString();
+                // Puedes guardar el destino seleccionado en una variable de instancia si lo necesitas
+                // Ejemplo: this.destinoActual = destinoSeleccionado;
+            }
+        }
+
+        private void CmbTomar_DropDownOpened(object sender, EventArgs e)
+        {
+            // Aquí puedes cargar dinámicamente los objetos disponibles para tomar
+            // Ejemplo:
+            // var comboBox = sender as ComboBox;
+            // comboBox.ItemsSource = gameController.Estado.Inventory;
+        }
+
+        private void CmbUsar_DropDownOpened(object sender, EventArgs e)
+        {
+            // Aquí puedes cargar dinámicamente los objetos disponibles para usar
+            // Ejemplo:
+            // var comboBox = sender as ComboBox;
+            // comboBox.ItemsSource = gameController.Estado.Inventory;
+        }
+
+        private void CmbTomar_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Aquí puedes agregar la lógica que deseas ejecutar cuando se seleccione un nuevo objeto en el ComboBox "CmbTomar"
+            var comboBox = sender as ComboBox;
+            if (comboBox != null && comboBox.SelectedItem != null)
+            {
+                string objetoSeleccionado = comboBox.SelectedItem.ToString();
+                // Puedes guardar el objeto seleccionado en una variable de instancia si lo necesitas
+                // Ejemplo: this.objetoActual = objetoSeleccionado;
+            }
+        }
+
+        private void CmbUsar_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Aquí puedes agregar la lógica que deseas ejecutar cuando se seleccione un nuevo objeto en el ComboBox "CmbUsar"
+            var comboBox = sender as ComboBox;
+            if (comboBox != null && comboBox.SelectedItem != null)
+            {
+                string objetoSeleccionado = comboBox.SelectedItem.ToString();
+                // Puedes guardar el objeto seleccionado en una variable de instancia si lo necesitas
+                // Ejemplo: this.objetoActual = objetoSeleccionado;
+            }
+        }
+
+        private void CmbPuedoIr_DropDownOpened(object sender, EventArgs e)
+        {
+            // Aquí puedes agregar la lógica para actualizar el ComboBox si es necesario
+        }
+
+        private void CmbPuedoIr_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            // Lógica para manejar el cambio de selección en el ComboBox "CmbPuedoIr"
+            // Por ejemplo, puedes dejarlo vacío si aún no tienes lógica definida.
+        }
     }
 }
