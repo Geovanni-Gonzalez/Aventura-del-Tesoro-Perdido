@@ -1,226 +1,166 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using Aventura.Controller;
+using Aventura.Model;
+using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
-using Aventura.Controller;
 
+// Asegúrate de que el namespace coincide con el de tu proyecto de Vista/UI
 namespace Aventura.View
 {
     public partial class MainWindow : Window
     {
-        private readonly GameController controller;
-
-        private readonly Dictionary<string, Button> placeButtons = new Dictionary<string, Button>();
-        private double personajeX = 0;
-        private const double buttonSpacing = 160;
-        private const double startX = 50;
-
+        private GameController gameController;
 
         public MainWindow()
         {
             InitializeComponent();
 
+            gameController = new GameController();
+
+            // Suscribirse al evento de actualización de estado
+            gameController.OnGameStateUpdated += ActualizarUI_OnGameStateUpdated;
+
+            // Inicializar el motor y cargar el estado inicial
             try
             {
-                controller = new GameController();
+                gameController.InicializarMotor();
+                gameController.ActualizarEstado();
+
+                // Actualizar la UI con el estado inicial
+                ActualizarUI(gameController.Estado);
+                MostrarMensaje("Motor Prolog inicializado. ¡Comienza la aventura!");
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al iniciar GameController: " + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                Close();
-                return;
-            }
+                string errorMsg = $"Error crítico al inicializar el motor Prolog. " +
+                                  $"Asegúrate de que los archivos .pl estén en la carpeta 'PrologFiles'.\n\n" +
+                                  $"Detalle: {ex.Message}";
 
-            // Cargar imagen del personaje
-            string spritePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Personaje", "explorador.png");
-            if (!File.Exists(spritePath))
-            {
-                PersonajeImg.Source = null;
-            }
-            else
-            {
-                PersonajeImg.Source = new BitmapImage(new Uri(spritePath));
-            }
+                MostrarMensaje(errorMsg);
+                MessageBox.Show(errorMsg, "Error de Inicialización", MessageBoxButton.OK, MessageBoxImage.Error);
 
-        
-
-            // Inicializar interfaz
-            RefreshLugares();
-        
+                // --- ERRORES ELIMINADOS ---
+                // Se eliminaron las referencias a botones que no existen
+                // (btnMover, btnTomar, btnUsar, txtObjetoTomar)
+            }
         }
 
-        // --- EVENTOS UI ---------------------------------------------------
+        // --- MANEJO DEL ESTADO DE LA VENTANA ---
+
+        // Esta función AHORA SÍ se conecta con el XAML
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            // Limpiar el motor de Prolog al cerrar la aplicación
+            gameController?.FinalizarMotor();
+        }
+
+        // --- ACTUALIZACIÓN DE LA UI ---
+
+        // Event handler que se llama cuando el GameController notifica un cambio
+        private void ActualizarUI_OnGameStateUpdated(GameState estado)
+        {
+            // El evento puede venir de otro hilo, usamos Dispatcher para asegurar
+            // que la actualización de la UI ocurra en el hilo principal.
+            Dispatcher.Invoke(() =>
+            {
+                ActualizarUI(estado);
+            });
+        }
+
+        // Método helper principal para actualizar los controles de la UI
+        // --- CORREGIDO ---
+        private void ActualizarUI(GameState estado)
+        {
+            if (estado == null) return;
+
+            // Actualizar barra de estado (Usa el control 'EstadoTxt' que SÍ existe en el XAML)
+            string inventarioStr = (estado.Inventory != null && estado.Inventory.Count > 0)
+                                    ? string.Join(", ", estado.Inventory)
+                                    : "(Vacío)";
+
+            // Actualiza el TextBlock 'EstadoTxt' de la barra superior
+            EstadoTxt.Text = $"Lugar: {estado.CurrentPlace ?? "Desconocido"} | Inventario: {inventarioStr}";
+
+            // TODO: (Próximos pasos)
+            // Aquí deberás actualizar la posición de 'PersonajeImg' en el Canvas
+            // y generar los botones de movimiento en 'LugarButtonsPanel'
+            // basado en 'estado.AvailablePlaces'.
+
+            // Se eliminó el código que actualizaba 'lblLugarActual', 'lstInventario' y 'lstLugares'
+            // porque esos controles no existen en tu MainWindow.xaml
+        }
+
+        // Método helper para añadir mensajes a la consola del juego
+        // --- CORREGIDO ---
+        private void MostrarMensaje(string mensaje)
+        {
+            // Evitar mensajes vacíos o de placeholder
+            if (!string.IsNullOrEmpty(mensaje) && !mensaje.Equals("(Sin mensaje)"))
+            {
+                // -- IMPORTANTE --
+                // Tu XAML no tiene un TextBox llamado 'txtMensajes'.
+                // Para solucionarlo, debes añadir un control <TextBox x:Name="txtMensajes"> a tu XAML.
+                //
+                // Como solución temporal, usamos un MessageBox:
+                MessageBox.Show(mensaje);
+            }
+        }
+
+        // --- MANEJADORES DE EVENTOS DE BOTONES (NUEVOS) ---
+        // Estos son los métodos que tu XAML SÍ está buscando
 
         private void BtnRefrescar_Click(object sender, RoutedEventArgs e)
         {
-            RefreshLugares();
+            gameController.ActualizarEstado();
+            gameController.NotifyStateChanged(); // Forzamos la actualización de la UI
+            MostrarMensaje("Estado actualizado.");
         }
 
         private void BtnInventario_Click(object sender, RoutedEventArgs e)
         {
-            var inv = controller.GetInventory();
-            string msg = inv.Count == 0 ? "Inventario vacío." : string.Join(", ", inv);
-            MessageBox.Show(msg, "Inventario", MessageBoxButton.OK, MessageBoxImage.Information);
+            string inventarioStr = (gameController.Estado.Inventory != null && gameController.Estado.Inventory.Count > 0)
+                                    ? string.Join(", ", gameController.Estado.Inventory)
+                                    : "(Vacío)";
+            MostrarMensaje($"Inventario: {inventarioStr}");
         }
 
         private void BtnObjetosLugar_Click(object sender, RoutedEventArgs e)
         {
-            var objs = controller.GetObjetosEnLugarActual();
-            if (objs.Count == 0)
-            {
-                MessageBox.Show("No hay objetos aquí.", "Objetos", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
+            // TODO: Necesitas una función en tu GameController que te diga
+            // qué objetos hay en el 'gameController.Estado.CurrentPlace'
+            MostrarMensaje("Función 'Objetos en Lugar' no implementada.");
+        }
 
-            var sel = ShowSelectionDialog("Objetos disponibles", objs);
-            if (!string.IsNullOrEmpty(sel))
-            {
-                string resp = controller.EjecutarComando($"tomar({sel})");
-                MessageBox.Show(resp, "Tomar objeto", MessageBoxButton.OK, MessageBoxImage.Information);
-                controller.NotifyStateChanged(); // 🔹 Notifica actualización de UI
-            }
+        private void BtnUsarObjeto_Click(object sender, RoutedEventArgs e)
+        {
+            // TODO: Necesitas una forma de seleccionar qué objeto usar
+            // (quizás un ComboBox o un InputDialog)
+            // string objeto = ... (objeto seleccionado)
+            // if (!string.IsNullOrEmpty(objeto))
+            // {
+            //    string mensaje = gameController.Usar(objeto);
+            //    MostrarMensaje(mensaje);
+            // }
+            MostrarMensaje("Función 'Usar Objeto' no implementada.");
+        }
+
+        private void BtnVerificarGane_Click(object sender, RoutedEventArgs e)
+        {
+            // TODO: Necesitas una función 'gameController.VerificarGane()'
+            // que consulte a Prolog si se ha ganado el juego.
+            MostrarMensaje("Función 'Verificar Gane' no implementada.");
         }
 
         private void BtnReiniciar_Click(object sender, RoutedEventArgs e)
         {
-            string resp = controller.EjecutarComando("reiniciar");
-            MessageBox.Show(resp, "Reiniciar juego", MessageBoxButton.OK, MessageBoxImage.Information);
-            controller.NotifyStateChanged();
-            PositionCharacterAt(controller.gameState.CurrentLocation);
+            // TODO: Necesitas una función 'gameController.ReiniciarJuego()'
+            // que llame a 'retractall' en Prolog y luego llame a 
+            // gameController.ActualizarEstado() y gameController.NotifyStateChanged()
+            MostrarMensaje("Función 'Reiniciar' no implementada.");
         }
 
-        private void LugarButton_Click(object sender, RoutedEventArgs e)
-        {
-            var btn = sender as Button;
-            if (btn == null) return;
-            string destino = (string)btn.Tag;
-
-            string resp = controller.EjecutarComando($"mover({destino})");
-            MessageBox.Show(resp, "Mover", MessageBoxButton.OK, MessageBoxImage.Information);
-
-            // Solo animar si no hay error
-            if (!string.IsNullOrEmpty(resp) && !resp.StartsWith("⚠️") && !resp.StartsWith("❌"))
-            {
-                AnimateCharacterTo(destino);
-            }
-        }
-
-        // --- MÉTODOS LÓGICOS Y VISUALES -----------------------------------
-
-        private void GameController_OnGameStateUpdated(Aventura.Model.GameState gs)
-        {
-            Dispatcher.Invoke(() =>
-            {
-                EstadoTxt.Text = $"Jugador: {gs.PlayerName} | Lugar: {gs.CurrentLocation} | " +
-                                 $"Puntos: {gs.Score} | Inventario: {string.Join(", ", gs.Inventory)}";
-            });
-        }
-
-        private void RefreshLugares()
-        {
-            LugarButtonsPanel.Children.Clear();
-            placeButtons.Clear();
-            var lugares = controller.GetLugares();
-
-            double x = startX;
-            foreach (var lugar in lugares)
-            {
-                var btn = new Button
-                {
-                    Content = lugar,
-                    Width = 120,
-                    Height = 48,
-                    Margin = new Thickness(8),
-                    Tag = lugar
-                };
-                btn.Click += LugarButton_Click;
-                LugarButtonsPanel.Children.Add(btn);
-                placeButtons[lugar] = btn;
-                x += buttonSpacing;
-            }
-
-            PositionCharacterAt(controller.gameState.CurrentLocation);
-        }
-
-        private void PositionCharacterAt(string lugar)
-        {
-            if (string.IsNullOrEmpty(lugar))
-            {
-                Canvas.SetLeft(PersonajeImg, startX);
-                personajeX = startX;
-                return;
-            }
-
-            if (!placeButtons.ContainsKey(lugar))
-            {
-                Canvas.SetLeft(PersonajeImg, startX);
-                personajeX = startX;
-                return;
-            }
-
-            int idx = placeButtons.Keys.ToList().IndexOf(lugar);
-            double x = startX + idx * buttonSpacing;
-            Canvas.SetLeft(PersonajeImg, x);
-            personajeX = x;
-        }
-
-        private void AnimateCharacterTo(string lugar)
-        {
-            if (!placeButtons.ContainsKey(lugar)) return;
-            int idx = placeButtons.Keys.ToList().IndexOf(lugar);
-            double destinoX = startX + idx * buttonSpacing;
-
-            var anim = new DoubleAnimation
-            {
-                From = personajeX,
-                To = destinoX,
-                Duration = TimeSpan.FromSeconds(0.9),
-                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseInOut }
-            };
-
-            PersonajeImg.BeginAnimation(Canvas.LeftProperty, anim);
-            personajeX = destinoX;
-        }
-
-        // --- DIÁLOGO DE SELECCIÓN SIMPLE ----------------------------------
-
-        private string ShowSelectionDialog(string title, List<string> items)
-        {
-            var dlg = new Window
-            {
-                Title = title,
-                Width = 300,
-                Height = 300,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Owner = this
-            };
-
-            var sp = new StackPanel { Margin = new Thickness(8) };
-            var lb = new ListBox { ItemsSource = items, Height = 200 };
-            sp.Children.Add(lb);
-            var btnOk = new Button
-            {
-                Content = "OK",
-                Margin = new Thickness(0, 8, 0, 0),
-                Width = 80,
-                HorizontalAlignment = HorizontalAlignment.Center
-            };
-            sp.Children.Add(btnOk);
-            dlg.Content = sp;
-
-            string selected = null;
-            btnOk.Click += (_, __) =>
-            {
-                selected = lb.SelectedItem as string;
-                dlg.Close();
-            };
-            dlg.ShowDialog();
-            return selected;
-        }
+        // --- MANEJADORES DE EVENTOS ANTIGUOS (ELIMINADOS) ---
+        // Se eliminaron BtnMover_Click, BtnTomar_Click y BtnUsar_Click
+        // porque no corresponden a los botones de tu XAML actual.
     }
 }
