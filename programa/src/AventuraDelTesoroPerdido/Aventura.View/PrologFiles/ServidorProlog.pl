@@ -8,7 +8,6 @@
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).
 :- use_module(library(http/http_json)).
-:- use_module(library(http/json_convert)).
 
 % --- Cargar los otros archivos de lógica ---
 :- prolog_load_context(directory, Dir),
@@ -39,53 +38,62 @@ iniciar_servidor(Port) :-
 
 % --- Consultar estado actual ---
 obtener_estado(_Request) :-
-    estado_actual(Estado),
-    reply_json_dict(_{ estado: Estado }).
+    jugador(Lugar),
+    inventario(Inv),
+    findall(L, lugar_visitado(L), Visitados),
+    reply_json_dict(_{
+        ubicacion: Lugar,
+        inventario: Inv,
+        visitados: Visitados
+    }).
 
-% --- Mover al jugador a otra ubicación ---
+% --- Mover al jugador ---
 mover_personaje(Request) :-
     http_read_json_dict(Request, Data),
     (   _{ destino: Destino } :< Data ->
-        (   mover_a(Destino, Resultado),
-            reply_json_dict(_{ resultado: Resultado })
+        retractall(message(_)),
+        (   mover(Destino) ->
+            message(Mensaje),
+            verifica_gane,
+            reply_json_dict(_{ resultado: "ok", mensaje: Mensaje })
+        ;   message(Mensaje),
+            reply_json_dict(_{ resultado: "error", mensaje: Mensaje })
         )
-    ;   reply_json_dict(_{ error: 'Falta el parámetro destino' }, [status(400)])
+    ;   reply_json_dict(_{ error: "Falta el parámetro 'destino'" }, [status(400)])
     ).
 
-% --- Usar un objeto en el entorno ---
+% --- Usar un objeto ---
 usar_objeto(Request) :-
     http_read_json_dict(Request, Data),
     (   _{ objeto: Objeto } :< Data ->
-        (   usar(Objeto, Resultado),
-            reply_json_dict(_{ resultado: Resultado })
+        retractall(message(_)),
+        (   usar(Objeto) ->
+            message(Mensaje),
+            reply_json_dict(_{ resultado: "ok", mensaje: Mensaje })
+        ;   message(Mensaje),
+            reply_json_dict(_{ resultado: "error", mensaje: Mensaje })
         )
-    ;   reply_json_dict(_{ error: 'Falta el parámetro objeto' }, [status(400)])
+    ;   reply_json_dict(_{ error: "Falta el parámetro 'objeto'" }, [status(400)])
     ).
 
 % --- Reiniciar el juego ---
 reiniciar_juego(_Request) :-
     reiniciar_estado,
-    reply_json_dict(_{ mensaje: 'Juego reiniciado correctamente.' }).
+    reply_json_dict(_{ resultado: "ok", mensaje: "Juego reiniciado correctamente." }).
 
 % ==========================
-% Predicados base (si no existen en tus otros archivos)
+% Reinicio del estado
 % ==========================
-
-% Si Estado.pl ya define estos, puedes omitir esta sección.
-
-:- dynamic estado_actual/1.
-estado_actual(inicio).
-
-mover_a(Destino, ok) :-
-    retractall(estado_actual(_)),
-    asserta(estado_actual(Destino)), !.
-mover_a(_, error).
-
-usar(_Objeto, usado).
-
 reiniciar_estado :-
-    retractall(estado_actual(_)),
-    asserta(estado_actual(inicio)).
+    retractall(jugador(_)),
+    retractall(inventario(_)),
+    retractall(objeto_usado(_)),
+    retractall(lugar_visitado(_)),
+    assert(jugador(bosque)),
+    assert(inventario([])),
+    assert(lugar_visitado(bosque)),
+    retractall(message(_)),
+    assert(message("Estado reiniciado.")).
 
 % ==========================
 % Ejecución automática

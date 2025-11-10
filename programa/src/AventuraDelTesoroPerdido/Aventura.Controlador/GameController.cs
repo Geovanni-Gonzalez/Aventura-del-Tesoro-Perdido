@@ -17,9 +17,9 @@ namespace Aventura.Controller
 
         public event Action<GameState> OnGameStateUpdated;
 
-        // ------------------------------
+        // ==============================
         // 🔄 Actualizar estado desde Prolog
-        // ------------------------------
+        // ==============================
         public async Task ActualizarEstadoAsync()
         {
             try
@@ -34,69 +34,70 @@ namespace Aventura.Controller
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error al actualizar estado: {ex.Message}");
-                throw;
+                Console.WriteLine($"⚠️ Error al actualizar estado: {ex.Message}");
             }
         }
 
-        // ------------------------------
-        // 🧭 Consultas de acción
-        // ------------------------------
+        // ==============================
+        // 🧭 Acciones de juego
+        // ==============================
+
         public async Task<string> MoverAAsync(string destino)
         {
-            return await EnviarConsultaAsync($"mover({destino}).");
-        }
-
-        public async Task<string> TomarAsync(string objeto)
-        {
-            return await EnviarConsultaAsync($"tomar({objeto}).");
+            var body = new { destino };
+            return await PostJsonAsync($"{_urlBase}/mover", body);
         }
 
         public async Task<string> UsarAsync(string objeto)
         {
-            return await EnviarConsultaAsync($"usar({objeto}).");
+            var body = new { objeto };
+            return await PostJsonAsync($"{_urlBase}/usar", body);
         }
 
-        public async Task<List<string>> ObtenerLugaresPosiblesAsync()
+        // (Si luego agregas "tomar/1" en el servidor, puedes usar el mismo patrón)
+        public async Task<string> TomarAsync(string objeto)
         {
-            string res = await EnviarConsultaAsync("lugares_posibles(L).");
-            return ParsearLista(res);
-        }
-
-        // ------------------------------
-        // 💾 Reinicio / Gane
-        // ------------------------------
-        public async Task<string> VerificarGaneAsync()
-        {
-            return await EnviarConsultaAsync("verificar_gane.");
+            return "⚠️ Acción 'tomar' no implementada en el servidor todavía.";
         }
 
         public async Task<string> ReiniciarJuegoAsync()
         {
-            return await EnviarConsultaAsync("reiniciar_juego.");
+            try
+            {
+                var response = await _httpClient.GetStringAsync($"{_urlBase}/reiniciar");
+                var json = JsonDocument.Parse(response);
+                return json.RootElement.GetProperty("mensaje").GetString();
+            }
+            catch (Exception ex)
+            {
+                return $"❌ Error al reiniciar: {ex.Message}";
+            }
         }
 
-        // ------------------------------
-        // 🔗 Comunicación HTTP
-        // ------------------------------
-        private async Task<string> EnviarConsultaAsync(string consulta)
+        // ==============================
+        // ⚙️ Utilidades HTTP
+        // ==============================
+        private async Task<string> PostJsonAsync(string url, object data)
         {
             try
             {
                 var contenido = new StringContent(
-                    JsonSerializer.Serialize(new { query = consulta }),
+                    JsonSerializer.Serialize(data),
                     Encoding.UTF8,
                     "application/json"
                 );
 
-                var response = await _httpClient.PostAsync($"{_urlBase}/consultar", contenido);
-                response.EnsureSuccessStatusCode();
+                var response = await _httpClient.PostAsync(url, contenido);
+                var jsonString = await response.Content.ReadAsStringAsync();
 
-                var respuesta = await response.Content.ReadAsStringAsync();
-                // Reemplazo de "using var" por bloque using tradicional compatible con C# 7.3
-                using (var jsonDoc = JsonDocument.Parse(respuesta))
+                using (var json = JsonDocument.Parse(jsonString))
                 {
-                    return jsonDoc.RootElement.GetProperty("respuesta").GetString();
+                    if (json.RootElement.TryGetProperty("mensaje", out var mensaje))
+                        return mensaje.GetString() ?? "Sin mensaje.";
+                    if (json.RootElement.TryGetProperty("resultado", out var resultado))
+                        return resultado.GetString() ?? "Sin resultado.";
+
+                    return jsonString;
                 }
             }
             catch (Exception ex)
@@ -105,19 +106,13 @@ namespace Aventura.Controller
             }
         }
 
-        // ------------------------------
+        // ==============================
         // 🔍 Utilidades
-        // ------------------------------
-        private List<string> ParsearLista(string texto)
+        // ==============================
+        public async Task<List<string>> ObtenerLugaresVisitadosAsync()
         {
-            if (string.IsNullOrWhiteSpace(texto)) return new List<string>();
-
-            texto = texto.Trim('[', ']', ' ');
-            var partes = texto.Split(',', (char)StringSplitOptions.RemoveEmptyEntries);
-            var lista = new List<string>();
-            foreach (var p in partes)
-                lista.Add(p.Trim());
-            return lista;
+            await ActualizarEstadoAsync();
+            return Estado.visitados ?? new List<string>();
         }
     }
 }

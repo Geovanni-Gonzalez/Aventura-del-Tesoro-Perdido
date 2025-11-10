@@ -4,11 +4,9 @@ namespace Aventura.Model
 {
     public class GameState
     {
-        public string CurrentPlace { get; set; } = "";
-        public List<string> Inventory { get; set; } = new List<string>();
-        public List<string> AvailablePlaces { get; set; } = new List<string>();
-        public string Description { get; set; } = "";
+        public string ubicacion { get; set; }
+        public List<string> inventario { get; set; }
+        public List<string> visitados { get; set; }
     }
 }
-
 

@@ -64,11 +64,11 @@ namespace Aventura.View
         {
             if (estado == null) return;
 
-            string inventarioStr = (estado.Inventory != null && estado.Inventory.Count > 0)
-                ? string.Join(", ", estado.Inventory)
+            string inventarioStr = (estado.inventario != null && estado.inventario.Count > 0)
+                ? string.Join(", ", estado.inventario)
                 : "(Vacío)";
 
-            EstadoTxt.Text = $"📍 Lugar: {estado.CurrentPlace ?? "Desconocido"} | 🎒 Inventario: {inventarioStr}";
+            EstadoTxt.Text = $"📍 Lugar: {estado.ubicacion ?? "Desconocido"} | 🎒 Inventario: {inventarioStr}";
         }
 
         private void MostrarMensaje(string mensaje)
@@ -88,8 +88,8 @@ namespace Aventura.View
 
         private void BtnInventario_Click(object sender, RoutedEventArgs e)
         {
-            string inventarioStr = (gameController.Estado.Inventory != null && gameController.Estado.Inventory.Count > 0)
-                ? string.Join(", ", gameController.Estado.Inventory)
+            string inventarioStr = (gameController.Estado.inventario != null && gameController.Estado.inventario.Count > 0)
+                ? string.Join(", ", gameController.Estado.inventario)
                 : "(Vacío)";
             MostrarMensaje($"🎒 Inventario actual: {inventarioStr}");
         }
@@ -118,8 +118,7 @@ namespace Aventura.View
 
         private async void BtnLugaresVisitados_Click(object sender, RoutedEventArgs e)
         {
-            var lugares = await gameController.ObtenerLugaresPosiblesAsync();
-            MostrarMensaje($"🌍 Lugares posibles: {string.Join(", ", lugares)}");
+            // Aquí puedes agregar la lógica que deseas ejecutar cuando se haga clic en el botón "Lugares Visitados"
         }
 
         private void BtnQueTengo_Click(object sender, RoutedEventArgs e)
@@ -129,7 +128,7 @@ namespace Aventura.View
 
         private void BtnDondeEstoy_Click(object sender, RoutedEventArgs e)
         {
-            MostrarMensaje($"📍 Estás en: {gameController.Estado.CurrentPlace}");
+            MostrarMensaje($"📍 Estás en: {gameController.Estado.ubicacion}");
         }
 
         private void BtnVerificarGane_Click(object sender, RoutedEventArgs e)
