@@ -20,7 +20,8 @@ namespace Aventura.Controller
             {
                 CurrentPlace = "",
                 AvailablePlaces = new List<string>(),
-                Inventory = new List<string>()
+                Inventory = new List<string>(),
+                AvailableObjects = new List<string>()
             };
         }
 
@@ -114,6 +115,7 @@ namespace Aventura.Controller
             Estado.CurrentPlace = EjecutarConsulta("donde_estoy");
             Estado.Inventory = EjecutarConsultaLista("que_tengo");
             Estado.AvailablePlaces = ObtenerLugaresPosibles();
+            Estado.AvailableObjects = ObtenerObjetosEnLugarActual();
         }
 
         // === Mover al jugador ===
@@ -171,6 +173,67 @@ namespace Aventura.Controller
             }
 
             return lugares.Distinct().ToList();
+        }
+
+        // === NUEVO: Lugares visitados (usa el predicado lugar_visitados que guarda message(Lista)) ===
+        public List<string> ObtenerLugaresVisitados()
+        {
+            return EjecutarConsultaLista("lugar_visitados");
+        }
+
+        // === NUEVO: Todos los objetos del juego (recorriendo objeto(Obj, _)) ===
+        public List<string> ObtenerTodosLosObjetos()
+        {
+            var objetos = new List<string>();
+            try
+            {
+                using (var q = new PlQuery("objeto(Obj, _Lugar)."))
+                {
+                    foreach (PlQueryVariables v in q.SolutionVariables)
+                    {
+                        objetos.Add(v["Obj"].ToString());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                objetos.Add($"Error: {ex.Message}");
+            }
+            return objetos.Distinct().ToList();
+        }
+
+        // === NUEVO: Objetos en el lugar actual del jugador ===
+        public List<string> ObtenerObjetosEnLugarActual()
+        {
+            var lista = new List<string>();
+            try
+            {
+                using (var q = new PlQuery("jugador(LActual)."))
+                {
+                    if (q.NextSolution())
+                    {
+                        string lugarActual = q.Variables["LActual"].ToString();
+                        using (var q2 = new PlQuery($"objeto(Obj, {lugarActual})."))
+                        {
+                            foreach (PlQueryVariables v in q2.SolutionVariables)
+                            {
+                                lista.Add(v["Obj"].ToString());
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                lista.Add($"Error: {ex.Message}");
+            }
+            return lista.Distinct().ToList();
+        }
+
+        // === NUEVO: Ubicación de un objeto (usa donde_esta/1 que guarda message) ===
+        public string UbicacionDe(string objeto)
+        {
+            return EjecutarConsulta($"donde_esta({objeto})");
         }
     }
 }

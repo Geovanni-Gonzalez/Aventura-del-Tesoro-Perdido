@@ -9,6 +9,7 @@ namespace Aventura.Model
         public string CurrentPlace { get; set; }
         public List<string> AvailablePlaces { get; set; }
         public List<string> Inventory { get; set; }
+        public List<string> AvailableObjects { get; set; }
 
 
 
