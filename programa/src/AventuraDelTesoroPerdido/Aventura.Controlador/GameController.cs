@@ -59,7 +59,7 @@ namespace Aventura.Controller
         // ==============================
         public async Task<string> MoverAsync(string destino)
         {
-            var body = new { destino };
+            var body = new { destino=destino };
             var mensaje = await PostJsonAsync($"{_urlBase}/mover", body);
             await ActualizarEstadoAsync();
             return mensaje;
@@ -79,15 +79,9 @@ namespace Aventura.Controller
             if (string.IsNullOrWhiteSpace(objeto))
                 return "Selecciona un objeto válido.";
 
-            // Creamos el body de forma correcta
             var body = new { objeto = objeto };
-
-            // Post JSON y obtenemos mensaje
             string resultado = await PostJsonAsync("/tomar", body);
-
-            // Actualizamos estado del juego
             await ActualizarEstadoAsync();
-
             return resultado;
         }
 
@@ -106,7 +100,52 @@ namespace Aventura.Controller
                 return $"❌ Error al reiniciar: {ex.Message}";
             }
         }
+        public async Task<string> DondeEstoyAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetStringAsync("/donde_estoy");
+                var json = JsonDocument.Parse(response);
+                return json.RootElement.GetProperty("message").GetString() ?? "(Sin mensaje)";
+            }
+            catch (Exception ex)
+            {
+                return $"❌ Error al obtener ubicación: {ex.Message}";
+            }
+        }
 
+        public async Task<List<string>> ObtenerInventarioAsync()
+        {
+            var response = await _httpClient.GetStringAsync($"{_urlBase}/estado");
+            List<string> lista = new List<string>();
+            using (var json = JsonDocument.Parse(response))
+            {
+                var invJson = json.RootElement.GetProperty("inventario");
+                foreach (var item in invJson.EnumerateArray())
+                    lista.Add(item.GetString() ?? string.Empty);
+            }
+            return lista;
+        }
+
+
+        public async Task<List<string>> ObtenerTodosLosObjetosAsync()
+        {
+            var enLugar = await ObtenerObjetosEnLugarAsync();
+            var inv = await ObtenerInventarioAsync();
+            var todos = enLugar.Concat(inv).Distinct().ToList();
+            return todos;
+        }
+
+        public async Task<string> DondeEstaAsync(string objeto)
+        {
+            var body = new { objeto };
+            return await PostJsonAsync($"{_urlBase}/donde_esta", body);
+        }
+        public async Task<string> PuedoIrAsync(string destino)
+        {
+            var body = new { destino };
+            return await PostJsonAsync($"{_urlBase}/puedo_ir", body);
+        }
         // ==============================
         // 🔍 Consultas especiales
         // ==============================
@@ -193,6 +232,19 @@ namespace Aventura.Controller
             }
         }
 
+        public async Task<string> VerificarGaneAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetStringAsync("/verifica_gane");
+                var json = JsonDocument.Parse(response);
+                return json.RootElement.GetProperty("mensaje").GetString() ?? "(Sin mensaje)";
+            }
+            catch (Exception ex)
+            {
+                return $"❌ Error al verificar gane: {ex.Message}";
+            }
+        }
 
         // ==============================
         // ⚙️ Utilidades HTTP

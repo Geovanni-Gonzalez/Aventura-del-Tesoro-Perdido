@@ -56,21 +56,17 @@ donde_esta(Objeto) :-
 puedo_ir(Destino) :-
     jugador(Desde),
     \+ conectado(Desde, Destino), !,
-    Mensaje = 'No hay conexion directa.',
-    write(Mensaje), nl,
-    assertz(message(Mensaje)),
-    fail.
+    atom_concat('No hay conexión directa hacia ', Destino, Mensaje),
+    assertz(message(Mensaje)).
+
 puedo_ir(Destino) :-
     requiere(Objeto, Destino),
-    inventario(Inv),
-    \+ member(Objeto, Inv), !,
-    atom_concat('Te falta el objeto: ', Objeto, Mensaje),
-    write(Mensaje), nl,
-    assertz(message(Mensaje)),
-    fail.
-puedo_ir(Destino) :-
-    atom_concat('Puedes ir a ', Destino, Mensaje),
-    write(Mensaje), nl,
+    \+ objeto_usado(Objeto), !,
+    atom_concat('Te falta usar el objeto: ', Objeto, Mensaje),
+    assertz(message(Mensaje)).
+
+puedo_ir(Destino) :-                     % Caso exitoso
+    atom_concat('Sí puedes ir a ', Destino, Mensaje),
     assertz(message(Mensaje)).
 
 
@@ -78,70 +74,56 @@ puedo_ir(Destino) :-
 % Permite al jugador tomar un objeto del lugar actual
 tomar(Objeto) :-
     jugador(Lugar),
-    (   objeto(Objeto, Lugar) ->
-        retract(objeto(Objeto, Lugar)),
-        inventario(Inv),
-        retract(inventario(Inv)),
-        assert(inventario([Objeto|Inv])),
-        atom_concat('Tomaste el objeto: ', Objeto, Mensaje)
-    ;   atom_concat(Objeto, ' no esta en este lugar.', Mensaje)
-    ),
-    write(Mensaje), nl,
+    objeto(Objeto, Lugar),              % Si el objeto está en el lugar
+    retract(objeto(Objeto, Lugar)),
+    inventario(Inv),
+    retract(inventario(Inv)),
+    assert(inventario([Objeto|Inv])),
+    atom_concat('Tomaste el objeto: ', Objeto, Mensaje),
+    assertz(message(Mensaje)), !.
+
+tomar(Objeto) :-                        % Caso objeto no está en lugar
+    atom_concat(Objeto, ' no está en este lugar.', Mensaje),
     assertz(message(Mensaje)).
 
 
 % Permite al jugador usar un objeto de su inventario.
 usar(Objeto) :-
     inventario(Inv),
-    \+ member(Objeto, Inv), !,
+    \+ member(Objeto, Inv),            % Si no está en inventario
     atom_concat('No tienes el objeto: ', Objeto, Mensaje),
-    write(Mensaje), nl,
-    assertz(message(Mensaje)),
-    fail.
+    assertz(message(Mensaje)), !.
+
 usar(Objeto) :-
-    objeto_usado(Objeto), !,
-    atom_concat('Ya habias usado: ', Objeto, Mensaje),
-    write(Mensaje), nl,
-    assertz(message(Mensaje)).
-usar(Objeto) :-
+    objeto_usado(Objeto),              % Si ya se usó
+    atom_concat('Ya habías usado: ', Objeto, Mensaje),
+    assertz(message(Mensaje)), !.
+
+usar(Objeto) :-                          % Caso exitoso
     assert(objeto_usado(Objeto)),
     atom_concat('Usaste el objeto: ', Objeto, Mensaje),
-    write(Mensaje), nl,
     assertz(message(Mensaje)).
 
 
 % Mueve al jugador a un nuevo lugar si cumple los requisitos.
 mover(Destino) :-
     jugador(Desde),
-    \+ conectado(Desde, Destino), !,
+    \+ conectado(Desde, Destino),
     Mensaje = 'No hay conexion directa.',
-    write(Mensaje), nl,
-    assertz(message(Mensaje)),
-    fail.
+    assertz(message(Mensaje)), !.
+
 mover(Destino) :-
     requiere(Objeto, Destino),
-    \+ objeto_usado(Objeto), !,
+    \+ objeto_usado(Objeto),
     atom_concat('Necesitas USAR el objeto: ', Objeto, Mensaje),
-    write(Mensaje), nl,
-    assertz(message(Mensaje)),
-    fail.
-mover(Destino) :-
-    requiereVisita(Destino, LugarReq),
-    \+ lugar_visitado(LugarReq), !,
-    atom_concat('Necesitas haber visitado ', LugarReq, Mensaje),
-    write(Mensaje), nl,
-    assertz(message(Mensaje)),
-    fail.
+    assertz(message(Mensaje)), !.
+
 mover(Destino) :-
     jugador(Desde),
     retract(jugador(Desde)),
     assert(jugador(Destino)),
     (lugar_visitado(Destino) -> true ; assert(lugar_visitado(Destino))),
-    lugar(Destino, Descripcion),
-    atom_concat('Te moviste a ', Destino, M1),
-    atom_concat(M1, '. ', M2),
-    atom_concat(M2, Descripcion, Mensaje), % Une "Te moviste a cueva. Cueva oscura..."
-    write(Mensaje), nl,
+    atom_concat('Te moviste a ', Destino, Mensaje),
     assertz(message(Mensaje)).
 
 
