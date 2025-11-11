@@ -22,7 +22,7 @@
 % Puntos de entrada HTTP
 % ==========================
 :- http_handler(root(estado), obtener_estado, []).
-:- http_handler(root(mover), mover_personaje, []).
+:- http_handler(root(mover), mover_lugar, []).
 :- http_handler(root(usar), usar_objeto, []).
 :- http_handler(root(reiniciar), reiniciar_juego, []).
 :- http_handler(root(visitados), visitados, []).
@@ -40,40 +40,67 @@ iniciar_servidor(Port) :-
 % ==========================
 % Endpoints HTTP
 % ==========================
+
+% --- Tomar un objeto ---
 tomar_objeto(Request) :-
     http_read_json_dict(Request, Data),
     ( _{ objeto: ObjetoStr } :< Data ->
         atom_string(Objeto, ObjetoStr),
         retractall(message(_)),
-        tomar(Objeto),
-        message(MensajeAtom),
-        atom_string(MensajeAtom, MensajeStr),
+        ( tomar(Objeto) -> true ; true ),
+        ( message(MensajeAtom) -> atom_string(MensajeAtom, MensajeStr) ; MensajeStr = "Sin mensaje." ),
         reply_json_dict(_{ resultado: "ok", mensaje: MensajeStr })
     ; reply_json_dict(_{ error: "Falta el parámetro 'objeto'" }, [status(400)])
     ).
 
+% --- Mover al jugador ---
+mover_lugar(Request) :-
+    http_read_json_dict(Request, Data),
+    ( _{ destino: DestinoStr } :< Data ->
+        atom_string(Destino, DestinoStr),
+        retractall(message(_)),
+        ( mover(Destino) -> true ; true ),
+        ( message(MensajeAtom) -> atom_string(MensajeAtom, MensajeStr) ; MensajeStr = "Sin mensaje." ),
+        reply_json_dict(_{ resultado: "ok", mensaje: MensajeStr })
+    ; reply_json_dict(_{ error: "Falta el parámetro 'destino'" }, [status(400)])
+    ).
 
+% --- Usar un objeto ---
+usar_objeto(Request) :-
+    http_read_json_dict(Request, Data),
+    ( _{ objeto: ObjetoStr } :< Data ->
+        atom_string(Objeto, ObjetoStr),       % Convierte string a átomo
+        retractall(message(_)),               % Limpiamos mensajes previos
+        ( usar(Objeto) -> true ; true ),      % Ejecuta la acción (aunque falle, no rompe)
+        ( message(MensajeAtom) -> 
+            atom_string(MensajeAtom, MensajeStr) 
+        ; 
+            MensajeStr = "Sin mensaje." 
+        ),
+        reply_json_dict(_{ resultado: "ok", mensaje: MensajeStr })
+    ; reply_json_dict(_{ error: "Falta el parámetro 'objeto'" }, [status(400)])
+    ).
 
 % --- Caminos posibles desde la ubicación actual ---
 caminos(_Request) :-
     jugador(UbicacionActual),
     findall(DestinoStr,
             ( conectado(UbicacionActual, Destino),
-              atom_string(Destino, DestinoStr)  % <-- convierte átomo a string
+              atom_string(Destino, DestinoStr)
             ),
             LugaresConectados),
-    reply_json_dict(_{caminos: LugaresConectados}).
+    reply_json_dict(_{ caminos: LugaresConectados }).
 
 % --- Lugares visitados ---
 visitados(_Request) :-
     findall(L, lugar_visitado(L), Lista),
-    reply_json_dict(_{visitados: Lista}).
+    reply_json_dict(_{ visitados: Lista }).
 
 % --- Objetos en el lugar actual ---
 objetos_lugar(_Request) :-
     jugador(Lugar),
     findall(O, objeto(O, Lugar), Objetos),
-    reply_json_dict(_{objetos: Objetos}).
+    reply_json_dict(_{ objetos: Objetos }).
 
 % --- Consultar estado actual ---
 obtener_estado(_Request) :-
@@ -85,35 +112,6 @@ obtener_estado(_Request) :-
         inventario: Inv,
         visitados: Visitados
     }).
-
-% --- Mover al jugador ---
-mover_personaje(Request) :-
-    http_read_json_dict(Request, Data),
-    (   _{ destino: Destino } :< Data ->
-        retractall(message(_)),
-        (   mover(Destino) ->
-            message(Mensaje),
-            verifica_gane,
-            reply_json_dict(_{ resultado: "ok", mensaje: Mensaje })
-        ;   message(Mensaje),
-            reply_json_dict(_{ resultado: "error", mensaje: Mensaje })
-        )
-    ;   reply_json_dict(_{ error: "Falta el parámetro 'destino'" }, [status(400)])
-    ).
-
-% --- Usar un objeto ---
-usar_objeto(Request) :-
-    http_read_json_dict(Request, Data),
-    (   _{ objeto: Objeto } :< Data ->
-        retractall(message(_)),
-        (   usar(Objeto) ->
-            message(Mensaje),
-            reply_json_dict(_{ resultado: "ok", mensaje: Mensaje })
-        ;   message(Mensaje),   
-            reply_json_dict(_{ resultado: "error", mensaje: Mensaje })
-        )
-    ;   reply_json_dict(_{ error: "Falta el parámetro 'objeto'" }, [status(400)])
-    ).
 
 % --- Reiniciar el juego ---
 reiniciar_juego(_Request) :-

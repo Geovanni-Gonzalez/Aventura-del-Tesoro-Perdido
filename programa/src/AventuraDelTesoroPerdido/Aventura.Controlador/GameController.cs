@@ -57,13 +57,14 @@ namespace Aventura.Controller
         // ==============================
         // 🧭 Acciones de juego
         // ==============================
-        public async Task<string> MoverAAsync(string destino)
+        public async Task<string> MoverAsync(string destino)
         {
             var body = new { destino };
             var mensaje = await PostJsonAsync($"{_urlBase}/mover", body);
             await ActualizarEstadoAsync();
             return mensaje;
         }
+
 
         public async Task<string> UsarAsync(string objeto)
         {

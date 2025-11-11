@@ -75,15 +75,16 @@ namespace Aventura.View
         {
             if (CmbMover.SelectedItem is string destino)
             {
-                string resultado = await gameController.MoverAAsync(destino);
+                string resultado = await gameController.MoverAsync(destino);
                 MostrarMensaje(resultado);
                 await gameController.ActualizarEstadoAsync();
             }
             else
             {
-                MostrarMensaje("Selecciona un destino válido.");
+                MostrarMensaje("Selecciona un destino.");
             }
         }
+
 
         // 🤲 Tomar objeto
         private async void BtnTomar_Click(object sender, RoutedEventArgs e)
