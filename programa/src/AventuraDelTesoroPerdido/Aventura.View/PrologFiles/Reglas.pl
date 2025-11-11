@@ -78,20 +78,17 @@ puedo_ir(Destino) :-
 % Permite al jugador tomar un objeto del lugar actual
 tomar(Objeto) :-
     jugador(Lugar),
-    \+ objeto(Objeto, Lugar), !,
-    atom_concat(Objeto, ' no esta en este lugar.', Mensaje),
-    write(Mensaje), nl,
-    assertz(message(Mensaje)),
-    fail.
-tomar(Objeto) :-
-    jugador(Lugar),
-    retract(objeto(Objeto, Lugar)),
-    inventario(Inv),
-    retract(inventario(Inv)),
-    assert(inventario([Objeto|Inv])),
-    atom_concat('Tomaste el objeto: ', Objeto, Mensaje),
+    (   objeto(Objeto, Lugar) ->
+        retract(objeto(Objeto, Lugar)),
+        inventario(Inv),
+        retract(inventario(Inv)),
+        assert(inventario([Objeto|Inv])),
+        atom_concat('Tomaste el objeto: ', Objeto, Mensaje)
+    ;   atom_concat(Objeto, ' no esta en este lugar.', Mensaje)
+    ),
     write(Mensaje), nl,
     assertz(message(Mensaje)).
+
 
 % Permite al jugador usar un objeto de su inventario.
 usar(Objeto) :-

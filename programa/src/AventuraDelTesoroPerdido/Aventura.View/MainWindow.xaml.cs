@@ -88,7 +88,7 @@ namespace Aventura.View
         // 🤲 Tomar objeto
         private async void BtnTomar_Click(object sender, RoutedEventArgs e)
         {
-            if (CmbTomar.SelectedItem is string objeto)
+            if (CmbTomar.SelectedItem is string objeto) 
             {
                 string resultado = await gameController.TomarAsync(objeto);
                 MostrarMensaje(resultado);
@@ -179,7 +179,8 @@ namespace Aventura.View
 
         private void CmbUsar_DropDownOpened(object sender, EventArgs e)
         {
-            // Aquí puedes agregar la lógica para actualizar los elementos del ComboBox si es necesario
+            var inventario = gameController.Estado.inventario;
+            CmbUsar.ItemsSource = inventario ?? new List<string>();
         }
 
         private void CmbUsar_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)

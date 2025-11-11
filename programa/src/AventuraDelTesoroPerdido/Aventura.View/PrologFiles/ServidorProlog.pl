@@ -27,6 +27,7 @@
 :- http_handler(root(visitados), visitados, []).
 :- http_handler(root(objetos_lugar), objetos_lugar, []).
 :- http_handler(root(caminos), caminos, []).
+:- http_handler(root(tomar), tomar_objeto, []).
 
 % ==========================
 % Iniciar Servidor
@@ -39,6 +40,19 @@ iniciar_servidor(Port) :-
 % Endpoints HTTP
 % ==========================
 
+tomar_objeto(Request) :-
+    http_read_json_dict(Request, Data),
+    (   _{ objeto: Objeto } :< Data ->
+        retractall(message(_)),        % Limpiar mensaje previo
+        (   tomar(Objeto) ->           % Intentar tomar objeto
+            message(Mensaje)
+        ;   message(Mensaje)           % Si no se pudo tomar
+        ),
+        % Siempre responder con JSON, nunca 500
+        reply_json_dict(_{ resultado: "ok", mensaje: Mensaje })
+    ;   % Falta parámetro 'objeto'
+        reply_json_dict(_{ error: "Falta el parámetro 'objeto'" }, [status(400)])
+    ).
 % --- Caminos posibles desde la ubicación actual ---
 caminos(_Request) :-
     jugador(UbicacionActual),

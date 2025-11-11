@@ -1,40 +1,56 @@
-﻿using Aventura.Model;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Aventura.Model;
 
 namespace Aventura.Controller
 {
     public class GameController
     {
-        private readonly HttpClient _httpClient = new HttpClient();
-        private readonly string _urlBase = "http://localhost:5000"; // Servidor Prolog HTTP
+        private readonly HttpClient _httpClient;
+        private readonly string _urlBase;
 
         public GameState Estado { get; private set; } = new GameState();
-
         public event Action<GameState> OnGameStateUpdated;
 
+        public GameController()
+        {
+            _urlBase = "http://localhost:5000"; // Servidor Prolog HTTP
+            _httpClient = new HttpClient
+            {
+                BaseAddress = new Uri(_urlBase)
+            };
+        }
+
         // ==============================
-        // 🔄 Actualizar estado general
+        // Actualizar estado general
         // ==============================
         public async Task ActualizarEstadoAsync()
         {
             try
             {
-                var response = await _httpClient.GetStringAsync($"{_urlBase}/estado");
-                var nuevoEstado = JsonSerializer.Deserialize<GameState>(response);
-                if (nuevoEstado != null)
-                {
-                    Estado = nuevoEstado;
-                    OnGameStateUpdated?.Invoke(Estado);
-                }
+                var response = await _httpClient.GetStringAsync("/estado");
+                var json = JsonDocument.Parse(response).RootElement;
+
+                Estado.ubicacion = json.GetProperty("ubicacion").GetString() ?? "";
+                Estado.inventario = json.GetProperty("inventario")
+                                        .EnumerateArray()
+                                        .Select(x => x.GetString() ?? "")
+                                        .ToList();
+                Estado.visitados = json.GetProperty("visitados")
+                                        .EnumerateArray()
+                                        .Select(x => x.GetString() ?? "")
+                                        .ToList();
+
+                OnGameStateUpdated?.Invoke(Estado);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"⚠️ Error al actualizar estado: {ex.Message}");
+                Console.WriteLine($"❌ Error al actualizar estado: {ex.Message}");
             }
         }
 
@@ -59,9 +75,15 @@ namespace Aventura.Controller
 
         public async Task<string> TomarAsync(string objeto)
         {
+            // Creamos el body JSON con el objeto
             var body = new { objeto };
-            var mensaje = await PostJsonAsync($"{_urlBase}/tomar", body);
+
+            // Llamamos al endpoint '/tomar' usando PostJsonAsync
+            var mensaje = await PostJsonAsync("/tomar", body);
+
+            // Actualizamos estado local después de tomar el objeto
             await ActualizarEstadoAsync();
+
             return mensaje;
         }
 
@@ -182,8 +204,9 @@ namespace Aventura.Controller
                 );
 
                 var response = await _httpClient.PostAsync(url, contenido);
-                var jsonString = await response.Content.ReadAsStringAsync();
+                response.EnsureSuccessStatusCode(); // Lanza excepción si no es 200
 
+                var jsonString = await response.Content.ReadAsStringAsync();
                 using (var json = JsonDocument.Parse(jsonString))
                 {
                     if (json.RootElement.TryGetProperty("mensaje", out var mensaje))
