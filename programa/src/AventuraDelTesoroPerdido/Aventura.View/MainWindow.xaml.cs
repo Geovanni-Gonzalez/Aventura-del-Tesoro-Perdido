@@ -2,6 +2,7 @@
 using Aventura.Model;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,213 +16,204 @@ namespace Aventura.View
         public MainWindow()
         {
             InitializeComponent();
-
             gameController = new GameController();
             gameController.OnGameStateUpdated += ActualizarUI_OnGameStateUpdated;
-
-            // Iniciar carga asíncrona al iniciar la ventana
-            Loaded += async (s, e) => await InicializarAsync();
+            CargarEstadoInicialAsync();
         }
 
-        // Inicializa el sistema de juego de manera asíncrona
-        private async Task InicializarAsync()
+        private async void CargarEstadoInicialAsync()
         {
             try
             {
-                MostrarMensaje("Inicializando conexión con Prolog...");
-
-                // Probar conexión al servidor
                 await gameController.ActualizarEstadoAsync();
-
-                MostrarMensaje("✅ Conexión establecida. ¡Comienza la aventura!");
-                ActualizarUI(gameController.Estado);
+                ActualizarUI_OnGameStateUpdated(gameController.Estado);
             }
             catch (Exception ex)
             {
-                string errorMsg = $"❌ Error al conectar con el servidor Prolog.\n\n" +
-                                  $"Asegúrate de haberlo iniciado con:\n" +
-                                  $"swipl ServidorProlog.pl, luego ?- server(5000).\n\n" +
-                                  $"Detalle: {ex.Message}";
-
-                MostrarMensaje(errorMsg);
-                MessageBox.Show(errorMsg, "Error de conexión", MessageBoxButton.OK, MessageBoxImage.Error);
+                MostrarMensaje($"Error al cargar el estado inicial: {ex.Message}");
             }
         }
 
-        // --- Limpieza ---
-        private void Window_Closed(object sender, EventArgs e)
-        {
-            // No es necesario limpiar motor, ya que es HTTP.
-        }
-
-        // --- Actualización de UI ---
         private void ActualizarUI_OnGameStateUpdated(GameState estado)
         {
-            Dispatcher.Invoke(() => ActualizarUI(estado));
-        }
+            EstadoTxt.Text = $"📍 Lugar: {estado.ubicacion ?? "Desconocido"}";
 
-        private void ActualizarUI(GameState estado)
-        {
-            if (estado == null) return;
+            // Inventario
+            LstInventario.ItemsSource = null;
+            LstInventario.ItemsSource = estado.inventario ?? new List<string>();
 
-            string inventarioStr = (estado.inventario != null && estado.inventario.Count > 0)
-                ? string.Join(", ", estado.inventario)
-                : "(Vacío)";
-
-            EstadoTxt.Text = $"📍 Lugar: {estado.ubicacion ?? "Desconocido"} | 🎒 Inventario: {inventarioStr}";
+            // Combos dinámicos
+            CmbMover.ItemsSource = estado.caminosPosibles ?? new List<string>();
+            CmbUsar.ItemsSource = estado.inventario ?? new List<string>();
+            CmbTomar.ItemsSource = estado.objetosEnLugar ?? new List<string>();
         }
 
         private void MostrarMensaje(string mensaje)
         {
-            if (!string.IsNullOrEmpty(mensaje) && !mensaje.Equals("(Sin mensaje)"))
-            {
+            if (!string.IsNullOrWhiteSpace(mensaje) && !mensaje.Equals("(Sin mensaje)"))
                 MessageBox.Show(mensaje);
-            }
         }
 
-        // --- EVENTOS DE BOTONES ---
+        // 🔄 Refrescar estado
         private async void BtnRefrescar_Click(object sender, RoutedEventArgs e)
         {
             await gameController.ActualizarEstadoAsync();
-            MostrarMensaje("🔄 Estado actualizado.");
         }
 
+        // 🎒 Inventario
         private void BtnInventario_Click(object sender, RoutedEventArgs e)
         {
-            string inventarioStr = (gameController.Estado.inventario != null && gameController.Estado.inventario.Count > 0)
-                ? string.Join(", ", gameController.Estado.inventario)
-                : "(Vacío)";
-            MostrarMensaje($"🎒 Inventario actual: {inventarioStr}");
+            var inv = gameController.Estado.inventario;
+            string mensaje = inv != null && inv.Count > 0
+                ? $"🎒 Inventario: {string.Join(", ", inv)}"
+                : "🎒 Inventario vacío.";
+            MostrarMensaje(mensaje);
         }
 
+        // 🚶 Mover a destino
         private async void BtnMover_Click(object sender, RoutedEventArgs e)
         {
-            // Ejemplo: podrías obtener el destino desde un ComboBox o un input
-            string destino = "playa"; // <- Reemplázalo por tu selección dinámica
-            var mensaje = await gameController.MoverAAsync(destino);
-            MostrarMensaje(mensaje);
+            if (CmbMover.SelectedItem is string destino)
+            {
+                string resultado = await gameController.MoverAAsync(destino);
+                MostrarMensaje(resultado);
+                await gameController.ActualizarEstadoAsync();
+            }
+            else
+            {
+                MostrarMensaje("Selecciona un destino válido.");
+            }
         }
 
+        // 🤲 Tomar objeto
         private async void BtnTomar_Click(object sender, RoutedEventArgs e)
         {
-            string objeto = "llave"; // <- Reemplázalo por tu selección dinámica
-            var mensaje = await gameController.TomarAsync(objeto);
-            MostrarMensaje(mensaje);
+            if (CmbTomar.SelectedItem is string objeto)
+            {
+                string resultado = await gameController.TomarAsync(objeto);
+                MostrarMensaje(resultado);
+                await gameController.ActualizarEstadoAsync();
+            }
+            else
+            {
+                MostrarMensaje("Selecciona un objeto para tomar.");
+            }
         }
 
+        // 🪄 Usar objeto
         private async void BtnUsar_Click(object sender, RoutedEventArgs e)
         {
-            string objeto = "llave"; // <- Reemplázalo por tu selección dinámica
-            var mensaje = await gameController.UsarAsync(objeto);
-            MostrarMensaje(mensaje);
+            if (CmbUsar.SelectedItem is string objeto)
+            {
+                string resultado = await gameController.UsarAsync(objeto);
+                MostrarMensaje(resultado);
+                await gameController.ActualizarEstadoAsync();
+            }
+            else
+            {
+                MostrarMensaje("Selecciona un objeto para usar.");
+            }
         }
 
+        // 📜 Lugares visitados
         private async void BtnLugaresVisitados_Click(object sender, RoutedEventArgs e)
         {
-            // Aquí puedes agregar la lógica que deseas ejecutar cuando se haga clic en el botón "Lugares Visitados"
+            var lugares = await gameController.ObtenerLugaresVisitadosAsync();
+
+            if (lugares == null || lugares.Count == 0)
+                MostrarMensaje("📍 Aún no has visitado ningún lugar.");
+            else
+                MostrarMensaje($"🏞️ Lugares visitados:\n{string.Join(", ", lugares)}");
         }
 
-        private void BtnQueTengo_Click(object sender, RoutedEventArgs e)
+        // 🧭 Objetos en el lugar actual
+        private async void BtnObjetosLugar_Click(object sender, RoutedEventArgs e)
         {
-            BtnInventario_Click(sender, e);
+            var objetos = await gameController.ObtenerObjetosEnLugarAsync();
+
+            if (objetos == null || objetos.Count == 0)
+                MostrarMensaje("📦 No hay objetos visibles en este lugar.");
+            else
+                MostrarMensaje($"🧭 Objetos en {gameController.Estado.ubicacion}:\n{string.Join(", ", objetos)}");
         }
 
-        private void BtnDondeEstoy_Click(object sender, RoutedEventArgs e)
+        // 🔁 Reiniciar juego
+        private async void BtnReiniciar_Click(object sender, RoutedEventArgs e)
         {
-            MostrarMensaje($"📍 Estás en: {gameController.Estado.ubicacion}");
+            string resultado = await gameController.ReiniciarJuegoAsync();
+            MostrarMensaje(resultado);
+            await gameController.ActualizarEstadoAsync();
         }
 
-        private void BtnVerificarGane_Click(object sender, RoutedEventArgs e)
+        // 🌍 ComboBox dinámico para caminos posibles
+        private async void CmbMover_DropDownOpened(object sender, EventArgs e)
         {
-            MostrarMensaje("Funcionalidad 'Verificar Gane' aún no implementada.");
-        }
-
-        private void BtnReiniciar_Click(object sender, RoutedEventArgs e)
-        {
-            MostrarMensaje("Funcionalidad 'Reiniciar' aún no implementada.");
-        }
-
-        private void CmbDondeEsta_DropDownOpened(object sender, EventArgs e)
-        {
-            // TODO: Cargar dinámicamente los lugares disponibles desde gameController.Estado.AvailablePlaces
-        }
-
-        private void CmbDondeEsta_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            // TODO: Acción cuando se seleccione un nuevo lugar
-        }
-
-        private void BtnObjetosLugar_Click(object sender, RoutedEventArgs e)
-        {
-            // Aquí puedes agregar la lógica que deseas ejecutar cuando se haga clic en el botón "Objetos en Lugar"
-            MessageBox.Show("Funcionalidad de 'Objetos en Lugar' aún no implementada.");
-        }
-
-        private void BtnUsarObjeto_Click(object sender, RoutedEventArgs e)
-        {
-            // Lógica para usar un objeto, puedes personalizar según tu aplicación
-            MessageBox.Show("Funcionalidad 'Usar Objeto' aún no implementada.");
-        }
-
-        private void CmbMover_DropDownOpened(object sender, EventArgs e)
-        {
-            // Aquí puedes cargar dinámicamente los lugares disponibles desde gameController.Estado.AvailablePlaces
-            // Ejemplo:
-            // var comboBox = sender as ComboBox;
-            // comboBox.ItemsSource = gameController.Estado.AvailablePlaces;
+            var caminos = await gameController.ObtenerCaminosAsync();
+            CmbMover.ItemsSource = caminos ?? new List<string>();
         }
 
         private void CmbMover_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Aquí puedes agregar la lógica que deseas ejecutar cuando se seleccione un nuevo lugar en el ComboBox "CmbMover"
-            // Por ejemplo, actualizar el destino para el movimiento
-            var comboBox = sender as ComboBox;
-            if (comboBox != null && comboBox.SelectedItem != null)
-            {
-                string destinoSeleccionado = comboBox.SelectedItem.ToString();
-                // Puedes guardar el destino seleccionado en una variable de instancia si lo necesitas
-                // Ejemplo: this.destinoActual = destinoSeleccionado;
-            }
+            if (CmbMover.SelectedItem is string destino)
+                EstadoTxt.Text = $"➡️ Vas hacia: {destino}";
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            // Aquí puedes agregar la lógica que necesites al cerrar la ventana, por ejemplo:
+            // Guardar estado, liberar recursos, etc.
         }
 
         private void CmbTomar_DropDownOpened(object sender, EventArgs e)
         {
-            // Aquí puedes cargar dinámicamente los objetos disponibles para tomar
-            // Ejemplo:
-            // var comboBox = sender as ComboBox;
-            // comboBox.ItemsSource = gameController.Estado.Inventory;
+            // Aquí puedes agregar la lógica para actualizar los elementos del ComboBox si es necesario
+        }
+
+        private void CmbTomar_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            // Aquí puedes agregar la lógica que debe ejecutarse cuando cambia la selección en el ComboBox CmbTomar.
+            // Por ejemplo:
+            // var seleccionado = CmbTomar.SelectedItem;
         }
 
         private void CmbUsar_DropDownOpened(object sender, EventArgs e)
         {
-            // Aquí puedes cargar dinámicamente los objetos disponibles para usar
-            // Ejemplo:
-            // var comboBox = sender as ComboBox;
-            // comboBox.ItemsSource = gameController.Estado.Inventory;
+            // Aquí puedes agregar la lógica para actualizar los elementos del ComboBox si es necesario
         }
 
-        private void CmbTomar_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void CmbUsar_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            // Aquí puedes agregar la lógica que deseas ejecutar cuando se seleccione un nuevo objeto en el ComboBox "CmbTomar"
-            var comboBox = sender as ComboBox;
-            if (comboBox != null && comboBox.SelectedItem != null)
-            {
-                string objetoSeleccionado = comboBox.SelectedItem.ToString();
-                // Puedes guardar el objeto seleccionado en una variable de instancia si lo necesitas
-                // Ejemplo: this.objetoActual = objetoSeleccionado;
-            }
+            // Aquí puedes agregar la lógica que deseas ejecutar cuando cambie la selección
+            // Por ejemplo, actualizar información relacionada con el objeto seleccionado
         }
 
-        private void CmbUsar_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void BtnVerificarGane_Click(object sender, RoutedEventArgs e)
         {
-            // Aquí puedes agregar la lógica que deseas ejecutar cuando se seleccione un nuevo objeto en el ComboBox "CmbUsar"
-            var comboBox = sender as ComboBox;
-            if (comboBox != null && comboBox.SelectedItem != null)
-            {
-                string objetoSeleccionado = comboBox.SelectedItem.ToString();
-                // Puedes guardar el objeto seleccionado en una variable de instancia si lo necesitas
-                // Ejemplo: this.objetoActual = objetoSeleccionado;
-            }
+            // Aquí va la lógica para verificar si el jugador ha ganado.
+            MessageBox.Show("Funcionalidad de verificación de gane aún no implementada.");
+        }
+
+        private void BtnDondeEstoy_Click(object sender, RoutedEventArgs e)
+        {
+            // Aquí puedes agregar la lógica que desees para el botón "Donde estoy"
+            MessageBox.Show("Estás en el lugar actual de la aventura.");
+        }
+
+        private void BtnQueTengo_Click(object sender, RoutedEventArgs e)
+        {
+            // Aquí puedes agregar la lógica que deseas ejecutar cuando se haga clic en el botón "Que tengo"
+            MessageBox.Show("Inventario actual:\n" + string.Join("\n", LstInventario.Items.Cast<string>()));
+        }
+
+        private void CmbDondeEsta_DropDownOpened(object sender, EventArgs e)
+        {
+            // Aquí puedes agregar la lógica para actualizar el ComboBox si es necesario
+        }
+
+        private void CmbDondeEsta_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            // Aquí puedes agregar la lógica que deseas ejecutar cuando cambie la selección
+            // Por ejemplo, actualizar información relacionada con el lugar seleccionado
         }
 
         private void CmbPuedoIr_DropDownOpened(object sender, EventArgs e)
@@ -231,8 +223,7 @@ namespace Aventura.View
 
         private void CmbPuedoIr_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            // Lógica para manejar el cambio de selección en el ComboBox "CmbPuedoIr"
-            // Por ejemplo, puedes dejarlo vacío si aún no tienes lógica definida.
+            // Aquí puedes agregar la lógica que necesites cuando cambie la selección
         }
     }
 }

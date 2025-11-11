@@ -24,6 +24,9 @@
 :- http_handler(root(mover), mover_personaje, []).
 :- http_handler(root(usar), usar_objeto, []).
 :- http_handler(root(reiniciar), reiniciar_juego, []).
+:- http_handler(root(visitados), visitados, []).
+:- http_handler(root(objetos_lugar), objetos_lugar, []).
+:- http_handler(root(caminos), caminos, []).
 
 % ==========================
 % Iniciar Servidor
@@ -35,6 +38,20 @@ iniciar_servidor(Port) :-
 % ==========================
 % Endpoints HTTP
 % ==========================
+
+
+caminos(_Request) :-
+    findall(_{desde: A, hacia: B}, conectado(A, B), Caminos),
+    reply_json_dict(_{caminos: Caminos}).
+
+visitados(_Request) :-
+    findall(L, lugar_visitado(L), Lista),
+    reply_json_dict(_{visitados: Lista}).
+
+objetos_lugar(_Request) :-
+    jugador(Lugar),
+    findall(O, objeto(O, Lugar), Objetos),
+    reply_json_dict(_{objetos: Objetos}).
 
 % --- Consultar estado actual ---
 obtener_estado(_Request) :-
@@ -70,7 +87,7 @@ usar_objeto(Request) :-
         (   usar(Objeto) ->
             message(Mensaje),
             reply_json_dict(_{ resultado: "ok", mensaje: Mensaje })
-        ;   message(Mensaje),
+        ;   message(Mensaje),   
             reply_json_dict(_{ resultado: "error", mensaje: Mensaje })
         )
     ;   reply_json_dict(_{ error: "Falta el parámetro 'objeto'" }, [status(400)])
