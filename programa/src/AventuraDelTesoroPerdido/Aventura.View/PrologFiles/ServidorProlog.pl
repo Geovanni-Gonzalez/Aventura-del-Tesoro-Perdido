@@ -7,6 +7,7 @@
 
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).
+:- use_module(library(http/json)).
 :- use_module(library(http/http_json)).
 
 % --- Cargar los otros archivos de lógica ---
@@ -39,20 +40,20 @@ iniciar_servidor(Port) :-
 % ==========================
 % Endpoints HTTP
 % ==========================
-
 tomar_objeto(Request) :-
     http_read_json_dict(Request, Data),
-    (   _{ objeto: Objeto } :< Data ->
-        retractall(message(_)),        % Limpiar mensaje previo
-        (   tomar(Objeto) ->           % Intentar tomar objeto
-            message(Mensaje)
-        ;   message(Mensaje)           % Si no se pudo tomar
-        ),
-        % Siempre responder con JSON, nunca 500
-        reply_json_dict(_{ resultado: "ok", mensaje: Mensaje })
-    ;   % Falta parámetro 'objeto'
-        reply_json_dict(_{ error: "Falta el parámetro 'objeto'" }, [status(400)])
+    ( _{ objeto: ObjetoStr } :< Data ->
+        atom_string(Objeto, ObjetoStr),
+        retractall(message(_)),
+        tomar(Objeto),
+        message(MensajeAtom),
+        atom_string(MensajeAtom, MensajeStr),
+        reply_json_dict(_{ resultado: "ok", mensaje: MensajeStr })
+    ; reply_json_dict(_{ error: "Falta el parámetro 'objeto'" }, [status(400)])
     ).
+
+
+
 % --- Caminos posibles desde la ubicación actual ---
 caminos(_Request) :-
     jugador(UbicacionActual),

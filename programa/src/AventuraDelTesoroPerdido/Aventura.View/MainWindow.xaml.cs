@@ -88,11 +88,10 @@ namespace Aventura.View
         // 🤲 Tomar objeto
         private async void BtnTomar_Click(object sender, RoutedEventArgs e)
         {
-            if (CmbTomar.SelectedItem is string objeto) 
+            if (CmbTomar.SelectedItem is string objeto)
             {
                 string resultado = await gameController.TomarAsync(objeto);
                 MostrarMensaje(resultado);
-                await gameController.ActualizarEstadoAsync();
             }
             else
             {

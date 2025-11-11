@@ -75,16 +75,19 @@ namespace Aventura.Controller
 
         public async Task<string> TomarAsync(string objeto)
         {
-            // Creamos el body JSON con el objeto
-            var body = new { objeto };
+            if (string.IsNullOrWhiteSpace(objeto))
+                return "Selecciona un objeto válido.";
 
-            // Llamamos al endpoint '/tomar' usando PostJsonAsync
-            var mensaje = await PostJsonAsync("/tomar", body);
+            // Creamos el body de forma correcta
+            var body = new { objeto = objeto };
 
-            // Actualizamos estado local después de tomar el objeto
+            // Post JSON y obtenemos mensaje
+            string resultado = await PostJsonAsync("/tomar", body);
+
+            // Actualizamos estado del juego
             await ActualizarEstadoAsync();
 
-            return mensaje;
+            return resultado;
         }
 
         public async Task<string> ReiniciarJuegoAsync()
@@ -204,17 +207,40 @@ namespace Aventura.Controller
                 );
 
                 var response = await _httpClient.PostAsync(url, contenido);
-                response.EnsureSuccessStatusCode(); // Lanza excepción si no es 200
 
+                // Lee la respuesta como string
                 var jsonString = await response.Content.ReadAsStringAsync();
-                using (var json = JsonDocument.Parse(jsonString))
-                {
-                    if (json.RootElement.TryGetProperty("mensaje", out var mensaje))
-                        return mensaje.GetString() ?? "Sin mensaje.";
-                    if (json.RootElement.TryGetProperty("resultado", out var resultado))
-                        return resultado.GetString() ?? "Sin resultado.";
 
-                    return jsonString;
+                // Verifica si la respuesta tiene JSON válido
+                if (string.IsNullOrWhiteSpace(jsonString))
+                    return "Sin respuesta del servidor.";
+
+                try
+                {
+                    using (var json = JsonDocument.Parse(jsonString))
+                    {
+                        var root = json.RootElement;
+
+                        // Intentamos leer "mensaje"
+                        if (root.TryGetProperty("mensaje", out var mensajeProp))
+                            return mensajeProp.GetString() ?? "Sin mensaje.";
+
+                        // Intentamos leer "resultado"
+                        if (root.TryGetProperty("resultado", out var resultadoProp))
+                            return resultadoProp.GetString() ?? "Sin resultado.";
+
+                        // Si solo hay "error"
+                        if (root.TryGetProperty("error", out var errorProp))
+                            return $"❌ Error del servidor: {errorProp.GetString()}";
+
+                        // Si no hay nada reconocido, retorna JSON crudo
+                        return jsonString;
+                    }
+                }
+                catch (JsonException)
+                {
+                    // Si la respuesta no es JSON válido
+                    return $"❌ Respuesta no JSON: {jsonString}";
                 }
             }
             catch (Exception ex)
@@ -222,5 +248,6 @@ namespace Aventura.Controller
                 return $"❌ Error al comunicarse con Prolog: {ex.Message}";
             }
         }
+
     }
 }
