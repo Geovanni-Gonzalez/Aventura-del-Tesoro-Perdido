@@ -164,9 +164,10 @@ namespace Aventura.View
             // Guardar estado, liberar recursos, etc.
         }
 
-        private void CmbTomar_DropDownOpened(object sender, EventArgs e)
+        private async void CmbTomar_DropDownOpened(object sender, EventArgs e)
         {
-            // Aquí puedes agregar la lógica para actualizar los elementos del ComboBox si es necesario
+            var objetos = await gameController.ObtenerObjetosEnLugarAsync();
+            CmbTomar.ItemsSource = objetos ?? new List<string>();
         }
 
         private void CmbTomar_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)

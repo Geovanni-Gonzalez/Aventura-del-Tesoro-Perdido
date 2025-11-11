@@ -1,15 +1,15 @@
-% ==========================
+Ôªø% ==========================
 % ServidorProlog.pl
 % ==========================
-% Servidor HTTP para conectar la lÛgica Prolog con C#
-% Autor: Geovanni Gonz·lez
+% Servidor HTTP para conectar la l√≥gica Prolog con C#
+% Autor: Geovanni Gonz√°lez
 % Proyecto: Aventura del Tesoro Perdido
 
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).
 :- use_module(library(http/http_json)).
 
-% --- Cargar los otros archivos de lÛgica ---
+% --- Cargar los otros archivos de l√≥gica ---
 :- prolog_load_context(directory, Dir),
    working_directory(_, Dir).
 
@@ -33,21 +33,28 @@
 % ==========================
 iniciar_servidor(Port) :-
     http_server(http_dispatch, [port(Port)]),
-    format('? Servidor Prolog iniciado en puerto ~w~n', [Port]).
+    format('‚úÖ Servidor Prolog iniciado en puerto ~w~n', [Port]).
 
 % ==========================
 % Endpoints HTTP
 % ==========================
 
-
+% --- Caminos posibles desde la ubicaci√≥n actual ---
 caminos(_Request) :-
-    findall(_{desde: A, hacia: B}, conectado(A, B), Caminos),
-    reply_json_dict(_{caminos: Caminos}).
+    jugador(UbicacionActual),
+    findall(DestinoStr,
+            ( conectado(UbicacionActual, Destino),
+              atom_string(Destino, DestinoStr)  % <-- convierte √°tomo a string
+            ),
+            LugaresConectados),
+    reply_json_dict(_{caminos: LugaresConectados}).
 
+% --- Lugares visitados ---
 visitados(_Request) :-
     findall(L, lugar_visitado(L), Lista),
     reply_json_dict(_{visitados: Lista}).
 
+% --- Objetos en el lugar actual ---
 objetos_lugar(_Request) :-
     jugador(Lugar),
     findall(O, objeto(O, Lugar), Objetos),
@@ -76,7 +83,7 @@ mover_personaje(Request) :-
         ;   message(Mensaje),
             reply_json_dict(_{ resultado: "error", mensaje: Mensaje })
         )
-    ;   reply_json_dict(_{ error: "Falta el par·metro 'destino'" }, [status(400)])
+    ;   reply_json_dict(_{ error: "Falta el par√°metro 'destino'" }, [status(400)])
     ).
 
 % --- Usar un objeto ---
@@ -90,7 +97,7 @@ usar_objeto(Request) :-
         ;   message(Mensaje),   
             reply_json_dict(_{ resultado: "error", mensaje: Mensaje })
         )
-    ;   reply_json_dict(_{ error: "Falta el par·metro 'objeto'" }, [status(400)])
+    ;   reply_json_dict(_{ error: "Falta el par√°metro 'objeto'" }, [status(400)])
     ).
 
 % --- Reiniciar el juego ---
@@ -113,6 +120,6 @@ reiniciar_estado :-
     assert(message("Estado reiniciado.")).
 
 % ==========================
-% EjecuciÛn autom·tica
+% Ejecuci√≥n autom√°tica
 % ==========================
 :- initialization(iniciar_servidor(5000)).
