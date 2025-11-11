@@ -259,6 +259,30 @@
                         </Style>
                     </Button.Resources>
                 </Button>
+                <Button x:Name="BtnComoGano" Content="Como Gano" Click="BtnComoGano_Click" Background="#2E2E73" Foreground="White" Width="100">
+                    <Button.Resources>
+                        <Style TargetType="{x:Type Button}">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type Button}">
+                                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="7">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="border" Property="Background" Value="#5272FF"/>
+                                            </Trigger>
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter TargetName="border" Property="Background" Value="#000B6B"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="Height" Value="25"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
                 <Label Content="Donde Esta:" VerticalAlignment="Center" Foreground="White" Margin="15,0,5,0"/>
                 <ComboBox x:Name="CmbDondeEsta" Width="150" DropDownOpened="CmbDondeEsta_DropDownOpened" SelectionChanged="CmbDondeEsta_SelectionChanged"/>
                 <Label Content="Puedo Ir A:" VerticalAlignment="Center" Foreground="White" Margin="15,0,5,0"/>

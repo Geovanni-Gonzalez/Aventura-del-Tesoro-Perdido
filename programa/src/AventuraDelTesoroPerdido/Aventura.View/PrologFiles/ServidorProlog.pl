@@ -34,6 +34,7 @@
 :- http_handler(root(que_tengo), que_tengo_handler, []).
 :- http_handler(root(donde_esta), donde_esta_handler, []).
 :- http_handler(root(puedo_ir), puedo_ir_handler, []).
+:- http_handler(root(como_gano), como_gano_handler, []).
 
 % ==========================
 % Iniciar Servidor
@@ -45,6 +46,13 @@ iniciar_servidor(Port) :-
 % ==========================
 % Handlers HTTP
 % ==========================
+
+
+como_gano_handler(_Request) :-
+    retractall(message(_)),
+    como_gano,
+    findall(M, message(M), Mensajes),
+    reply_json_dict(_{ mensajes: Mensajes }).
 
 % --- Estado general ---
 obtener_estado(_Request) :-

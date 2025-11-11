@@ -246,6 +246,39 @@ namespace Aventura.Controller
             }
         }
 
+
+        public async Task<List<string>> ComoGanoAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("/como_gano");
+                var jsonString = await response.Content.ReadAsStringAsync();
+
+                if (string.IsNullOrWhiteSpace(jsonString))
+                    return new List<string> { "Sin respuesta del servidor." };
+
+                using (var json = JsonDocument.Parse(jsonString))
+                {
+                    var root = json.RootElement;
+
+                    if (root.TryGetProperty("mensajes", out var mensajesProp) && mensajesProp.ValueKind == JsonValueKind.Array)
+                    {
+                        var lista = new List<string>();
+                        foreach (var item in mensajesProp.EnumerateArray())
+                            lista.Add(item.GetString() ?? "");
+                        return lista;
+                    }
+
+                    return new List<string> { "Respuesta inesperada del servidor." };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new List<string> { $"Error al comunicarse con Prolog: {ex.Message}" };
+            }
+        }
+
+
         // ==============================
         // ⚙️ Utilidades HTTP
         // ==============================

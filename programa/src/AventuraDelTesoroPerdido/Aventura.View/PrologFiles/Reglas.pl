@@ -1,59 +1,45 @@
-% ======================================================
-% Reglas.pl - Lógica y acciones del juego Aventura
-% ======================================================
+% ==========================
+% Reglas.pl
+% ==========================
 
-% ----------------------
-% Consultas
-% ----------------------
+% ---- Consultas ----
 
-% Ubicación actual del jugador
 donde_estoy :-
     jugador(Lugar),
     atom_concat('Estas en ', Lugar, Mensaje),
     assertz(message(Mensaje)).
 
-% Inventario actual del jugador
 que_tengo :-
-    inventario(Inv),
-    ( Inv = [] ->
-        Mensaje = 'No tienes ningun objeto.'
-    ;
-        atomic_list_concat(Inv, ', ', ListaStr),
-        atom_concat('Tienes: ', ListaStr, Mensaje)
-    ),
+    inventario(Lista),
+    ( Lista = [] -> Mensaje = 'No tienes ningun objeto.'
+    ; Mensaje = Lista ),
     assertz(message(Mensaje)).
 
-% Lugares visitados
 lugar_visitados :-
     findall(L, lugar_visitado(L), Lista),
-    atomic_list_concat(Lista, ', ', ListaStr),
-    atom_concat('Has visitado: ', ListaStr, Mensaje),
-    assertz(message(Mensaje)).
+    assertz(message(Lista)).
 
-% Dónde está un objeto
 donde_esta(Objeto) :-
     inventario(Inv),
     member(Objeto, Inv), !,
-    atom_concat(Objeto, ' está en tu inventario.', Mensaje),
+    atom_concat(Objeto, ' esta en tu inventario.', Mensaje),
     assertz(message(Mensaje)).
 donde_esta(Objeto) :-
     objeto(Objeto, Lugar), !,
-    atom_concat(Objeto, ' está en ', Temp),
+    atom_concat(Objeto, ' esta en ', Temp),
     atom_concat(Temp, Lugar, Mensaje),
     assertz(message(Mensaje)).
 donde_esta(Objeto) :-
     atom_concat(Objeto, ' no se encuentra en el juego.', Mensaje),
-    assertz(message(Mensaje)).
+    assertz(message(Mensaje)),
+    fail.
 
-% ----------------------
-% Verificaciones
-% ----------------------
+% ---- Verificación ----
 
-% Verifica si el jugador puede ir a un destino
 puedo_ir(Destino) :-
     jugador(Desde),
     \+ conectado(Desde, Destino), !,
-    atom_concat('No hay conexión directa hacia ', Destino, Mensaje),
+    atom_concat('No hay conexion directa hacia ', Destino, Mensaje),
     assertz(message(Mensaje)).
 
 puedo_ir(Destino) :-
@@ -63,29 +49,25 @@ puedo_ir(Destino) :-
     assertz(message(Mensaje)).
 
 puedo_ir(Destino) :-
-    atom_concat('Sí puedes ir a ', Destino, Mensaje),
+    atom_concat('Puedes ir a ', Destino, Mensaje),
     assertz(message(Mensaje)).
 
-% ----------------------
-% Acciones
-% ----------------------
+% ---- Acciones ----
 
-% Tomar un objeto del lugar actual
 tomar(Objeto) :-
     jugador(Lugar),
-    objeto(Objeto, Lugar), !,
+    objeto(Objeto, Lugar),              
     retract(objeto(Objeto, Lugar)),
     inventario(Inv),
     retract(inventario(Inv)),
     assert(inventario([Objeto|Inv])),
     atom_concat('Tomaste el objeto: ', Objeto, Mensaje),
-    assertz(message(Mensaje)).
+    assertz(message(Mensaje)), !.
 
 tomar(Objeto) :-
-    atom_concat(Objeto, ' no está en este lugar.', Mensaje),
+    atom_concat(Objeto, ' no esta en este lugar.', Mensaje),
     assertz(message(Mensaje)).
 
-% Usar un objeto
 usar(Objeto) :-
     inventario(Inv),
     \+ member(Objeto, Inv), !,
@@ -94,7 +76,7 @@ usar(Objeto) :-
 
 usar(Objeto) :-
     objeto_usado(Objeto), !,
-    atom_concat('Ya habías usado: ', Objeto, Mensaje),
+    atom_concat('Ya habias usado: ', Objeto, Mensaje),
     assertz(message(Mensaje)).
 
 usar(Objeto) :-
@@ -102,7 +84,6 @@ usar(Objeto) :-
     atom_concat('Usaste el objeto: ', Objeto, Mensaje),
     assertz(message(Mensaje)).
 
-% Mover jugador
 mover(Destino) :-
     jugador(Desde),
     \+ conectado(Desde, Destino), !,
@@ -119,13 +100,11 @@ mover(Destino) :-
     jugador(Desde),
     retract(jugador(Desde)),
     assert(jugador(Destino)),
-    ( lugar_visitado(Destino) -> true ; assert(lugar_visitado(Destino)) ),
+    (lugar_visitado(Destino) -> true ; assert(lugar_visitado(Destino))),
     atom_concat('Te moviste a ', Destino, Mensaje),
     assertz(message(Mensaje)).
 
-% ----------------------
-% Lógica de rutas y victoria
-% ----------------------
+% ---- Rutas y Victoria ----
 
 ruta(Inicio, Fin, Camino) :-
     ruta_aux(Inicio, Fin, [Inicio], CaminoInv),
@@ -138,10 +117,17 @@ ruta_aux(Actual, Fin, Visitados, Camino) :-
     ruta_aux(Vecino, Fin, [Vecino|Visitados], Camino).
 
 como_gano :-
-    tesoro(LugarGane, ObjetoGane),
     jugador(LugarActual),
-    ( ruta(LugarActual, LugarGane, Camino) -> true ; Camino = [] ),
-    assertz(message('Ruta de gane mostrada en consola.')).
+    forall(
+        tesoro(LugarGane, ObjetoGane),
+        (
+            ( ruta(LugarActual, LugarGane, Camino) -> atomic_list_concat(Camino,' -> ',CaminoStr)
+            ; CaminoStr = 'No se encontro ruta.'),
+            format(atom(Mensaje),'Objetivo: Conseguir "~w" y llevarlo a "~w". Ruta sugerida: ~w',
+                   [ObjetoGane,LugarGane,CaminoStr]),
+            assertz(message(Mensaje))
+        )
+    ).
 
 verifica_gane :-
     jugador(Lugar),

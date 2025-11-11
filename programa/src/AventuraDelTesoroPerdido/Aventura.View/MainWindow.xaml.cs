@@ -240,5 +240,14 @@ namespace Aventura.View
                 MostrarMensaje(mensaje);
             }
         }
+
+        private async void BtnComoGano_Click(object sender, RoutedEventArgs e)
+        {
+            var instrucciones = await gameController.ComoGanoAsync();
+            string mensaje = (instrucciones != null && instrucciones.Count > 0)
+                ? $"🏆 Cómo ganar:\n{string.Join("\n", instrucciones)}"
+                : "No hay instrucciones disponibles.";
+            MostrarMensaje(mensaje);
+        }
     }
 }
