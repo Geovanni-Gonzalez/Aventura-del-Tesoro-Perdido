@@ -6,7 +6,7 @@
 
 % Nombre: donde_estoy/0
 % Entrada: (ninguna)
-% Salida: Registra message(Mensaje) con la ubicaciÛn actual del jugador
+% Salida: Registra message(Mensaje) con la ubicaci√≥n actual del jugador
 % Descripcion: Obtiene el lugar actual del jugador y construye un mensaje descriptivo.
 donde_estoy :-
     jugador(Lugar),
@@ -15,7 +15,7 @@ donde_estoy :-
 
 % Nombre: que_tengo/0
 % Entrada: (ninguna)
-% Salida: Registra message(Mensaje) con el inventario (lista) o un texto si est· vacÌo
+% Salida: Registra message(Mensaje) con el inventario (lista) o un texto si est√° vac√≠o
 % Descripcion: Informa el contenido actual del inventario del jugador.
 que_tengo :-
     inventario(Lista),
@@ -32,9 +32,9 @@ lugar_visitados :-
     assertz(message(Lista)).
 
 % Nombre: donde_esta/1
-% Entrada: Objeto (·tomo)
-% Salida: Registra message(Mensaje) con la localizaciÛn del objeto; falla si no existe
-% Descripcion: Indica si el objeto est· en el inventario, en alg˙n lugar del mapa o no existe.
+% Entrada: Objeto (√°tomo)
+% Salida: Registra message(Mensaje) con la localizaci√≥n del objeto; falla si no existe
+% Descripcion: Indica si el objeto est√° en el inventario, en alg√∫n lugar del mapa o no existe.
 donde_esta(Objeto) :-
     inventario(Inv),
     member(Objeto, Inv), !,
@@ -50,12 +50,12 @@ donde_esta(Objeto) :-
     assertz(message(Mensaje)),
     fail.
 
-% ---- VerificaciÛn ----
+% ---- Verificaci√≥n ----
 
 % Nombre: puedo_ir/1
-% Entrada: Destino (·tomo)
-% Salida: Registra message(Mensaje) con el resultado de la verificaciÛn
-% Descripcion: Valida si existe conexiÛn, requisitos de uso de objetos, etc., para ir al destino.
+% Entrada: Destino (√°tomo)
+% Salida: Registra message(Mensaje) con el resultado de la verificaci√≥n
+% Descripcion: Valida si existe conexi√≥n, requisitos de uso de objetos, etc., para ir al destino.
 puedo_ir(Destino) :-
     jugador(Desde),
     \+ conectado(Desde, Destino), !,
@@ -75,7 +75,7 @@ puedo_ir(Destino) :-
 % ---- Acciones ----
 
 % Nombre: tomar/1
-% Entrada: Objeto (·tomo)
+% Entrada: Objeto (√°tomo)
 % Salida: Registra message(Mensaje) con el resultado de tomar; actualiza inventario/objeto
 % Descripcion: Toma un objeto del lugar actual, lo agrega al inventario y lo quita del mapa.
 tomar(Objeto) :-
@@ -93,7 +93,7 @@ tomar(Objeto) :-
     assertz(message(Mensaje)).
 
 % Nombre: usar/1
-% Entrada: Objeto (·tomo)
+% Entrada: Objeto (√°tomo)
 % Salida: Registra message(Mensaje); marca objeto_usado/1 cuando aplica
 % Descripcion: Usa un objeto del inventario para habilitar accesos o cumplir requisitos.
 usar(Objeto) :-
@@ -113,9 +113,9 @@ usar(Objeto) :-
     assertz(message(Mensaje)).
 
 % Nombre: mover/1
-% Entrada: Destino (·tomo)
+% Entrada: Destino (√°tomo)
 % Salida: Registra message(Mensaje); actualiza jugador/1 y lugar_visitado/1
-% Descripcion: Mueve al jugador al destino si hay conexiÛn y se cumplen requisitos.
+% Descripcion: Mueve al jugador al destino si hay conexi√≥n y se cumplen requisitos.
 mover(Destino) :-
     jugador(Desde),
     \+ conectado(Desde, Destino), !,
@@ -139,7 +139,7 @@ mover(Destino) :-
 % ---- Rutas y Victoria ----
 
 % Nombre: ruta/3
-% Entrada: Inicio (·tomo), Fin (·tomo), Camino (lista de ·tomos - salida)
+% Entrada: Inicio (√°tomo), Fin (√°tomo), Camino (lista de √°tomos - salida)
 % Salida: Camino con la secuencia de lugares desde Inicio hasta Fin (si existe)
 % Descripcion: Busca una ruta simple usando backtracking sobre conexiones.
 ruta(Inicio, Fin, Camino) :-
@@ -147,7 +147,7 @@ ruta(Inicio, Fin, Camino) :-
     reverse(CaminoInv, Camino).
 
 % Nombre: ruta_aux/4
-% Entrada: Actual (·tomo), Fin (·tomo), Visitados (lista), Camino (lista - salida)
+% Entrada: Actual (√°tomo), Fin (√°tomo), Visitados (lista), Camino (lista - salida)
 % Salida: Camino acumulado en orden inverso
 % Descripcion: DFS recursivo que evita ciclos con la lista de visitados.
 ruta_aux(Fin, Fin, Visitados, Visitados).
@@ -159,7 +159,7 @@ ruta_aux(Actual, Fin, Visitados, Camino) :-
 % Nombre: como_gano/0
 % Entrada: (ninguna)
 % Salida: Registra message(Mensaje) con el objetivo y ruta sugerida para cada tesoro
-% Descripcion: Informa condiciones de victoria y una ruta sugerida (si existe) desde la ubicaciÛn actual.
+% Descripcion: Informa condiciones de victoria y una ruta sugerida (si existe) desde la ubicaci√≥n actual.
 como_gano :-
     jugador(LugarActual),
     forall(
@@ -176,7 +176,7 @@ como_gano :-
 % Nombre: como_gano/0
 % Entrada: (ninguna)
 % Salida: Registra message(Mensaje) con el objetivo y ruta sugerida para cada tesoro
-% Descripcion: Informa condiciones de victoria y una ruta sugerida (si existe) desde la ubicaciÛn actual.
+% Descripcion: Informa condiciones de victoria y una ruta sugerida (si existe) desde la ubicaci√≥n actual.
 verifica_gane :-
     jugador(Lugar),
     inventario(Inv),
@@ -193,3 +193,4 @@ verifica_gane :-
 verifica_gane :-
     Mensaje = 'Aun no cumples las condiciones para ganar.',
     assertz(message(Mensaje)).
+    

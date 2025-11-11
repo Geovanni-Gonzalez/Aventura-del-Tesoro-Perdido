@@ -5,48 +5,48 @@
 % ------------------------------------------------
 
 % ==== Declaraciones Dinamicas ====
-% Le decimos a Prolog que estos hechos cambiaran
-% durante el juego (seran 'assert'ados y 'retract'ados)
+% Le decimos a Prolog que estos hechos cambiar√°n
+% durante el juego (ser√°n 'assert'ados y 'retract'ados)
 
 % Nombre: jugador/1
-% Entrada: Un ·tomo que representa el lugar actual (p.ej. bosque)
-% Salida: Verdadero si el hecho jugador(Lugar) est· registrado
-% Descripcion: Mantiene la ubicaciÛn actual del jugador en el mundo del juego.
+% Entrada: Un √°tomo que representa el lugar actual (p.ej. bosque)
+% Salida: Verdadero si el hecho jugador(Lugar) est√° registrado
+% Descripcion: Mantiene la ubicaci√≥n actual del jugador en el mundo del juego.
 :- dynamic jugador/1.
 
 % Nombre: inventario/1
-% Entrada: Una lista de ·tomos (objetos) que el jugador posee
-% Salida: Verdadero si el hecho inventario(ListaObjetos) est· registrado
-% Descripcion: Representa el conjunto de objetos actualmente en posesiÛn del jugador.
+% Entrada: Una lista de √°tomos (objetos) que el jugador posee
+% Salida: Verdadero si el hecho inventario(ListaObjetos) est√° registrado
+% Descripcion: Representa el conjunto de objetos actualmente en posesi√≥n del jugador.
 :- dynamic inventario/1.
 
 % Nombre: objeto/2
-% Entrada: Objeto (·tomo), Lugar (·tomo)
-% Salida: Verdadero si objeto(Objeto, Lugar) est· en la base de hechos
-% Descripcion: UbicaciÛn actual de un objeto en el mundo (antes de ser tomado).
+% Entrada: Objeto (√°tomo), Lugar (√°tomo)
+% Salida: Verdadero si objeto(Objeto, Lugar) est√° en la base de hechos
+% Descripcion: Ubicaci√≥n actual de un objeto en el mundo (antes de ser tomado).
 :- dynamic objeto/2.
 
 % Nombre: objeto_usado/1
-% Entrada: Objeto (·tomo)
+% Entrada: Objeto (√°tomo)
 % Salida: Verdadero si el objeto ya fue marcado como usado
-% Descripcion: Indica quÈ objetos han sido empleados para cumplir requisitos.
+% Descripcion: Indica qu√© objetos han sido empleados para cumplir requisitos.
 :- dynamic objeto_usado/1.
 
 % Nombre: lugar_visitado/1
-% Entrada: Lugar (·tomo)
+% Entrada: Lugar (√°tomo)
 % Salida: Verdadero si el jugador ha visitado ese lugar
-% Descripcion: Historial de exploraciÛn del jugador para validar rutas y condiciones.
+% Descripcion: Historial de exploraci√≥n del jugador para validar rutas y condiciones.
 :- dynamic lugar_visitado/1.
 
 % Nombre: message/1
-% Entrada: Mensaje (string/·tomo)
-% Salida: Verdadero si el ˙ltimo mensaje fue almacenado
-% Descripcion: Buffer del ˙ltimo mensaje generado por las reglas para consumo en CSharp.
+% Entrada: Mensaje (string/√°tomo)
+% Salida: Verdadero si el √∫ltimo mensaje fue almacenado
+% Descripcion: Buffer del √∫ltimo mensaje generado por las reglas para consumo en CSharp.
 :- dynamic message/1.
 
 % ==== Estado Inicial del Juego ====
 % Estos son los hechos con los que el juego comienza
-% En 'reglas.pl' se modificara estos hechos
+% En 'reglas.pl' se modificar√°n estos hechos
 
 % Nombre: jugador/1 (estado inicial)
 % Entrada: bosque
@@ -56,7 +56,7 @@ jugador(bosque).
 
 % Nombre: inventario/1 (estado inicial)
 % Entrada: []
-% Salida: Verdadero (inventario vacÌo)
+% Salida: Verdadero (inventario vac√≠o)
 % Descripcion: El jugador comienza sin objetos en su inventario.
 inventario([]).
 

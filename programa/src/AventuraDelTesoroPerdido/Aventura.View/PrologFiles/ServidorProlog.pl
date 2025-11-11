@@ -1,4 +1,4 @@
-﻿% ==========================
+% ==========================
 % ServidorProlog.pl
 % ==========================
 % Servidor HTTP para conectar la lógica Prolog con C#

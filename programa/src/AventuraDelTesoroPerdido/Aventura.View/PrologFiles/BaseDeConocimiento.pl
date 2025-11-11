@@ -1,7 +1,5 @@
 % Base de conocimiento.pl
-
-% Este archivo define el mundo del juego
-% Contiene todos los hechos que no cambian
+% Define el mundo estático del juego (hechos que no cambian durante la partida)
 % ------------------------------------------------
 
 % ==== Lugares ====
