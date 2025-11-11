@@ -24,7 +24,9 @@
 :- dynamic lugar_visitado/1.
 
 % Guarda el ultimo mensaje para C lo lea
-:- dynamic message/1.
+:- dynamic message/1.	
+
+:- dynamic accion/1.
 
 % ==== Estado Inicial del Juego ====
 % Estos son los hechos con los que el juego comienza

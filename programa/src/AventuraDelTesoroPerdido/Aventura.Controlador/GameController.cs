@@ -277,6 +277,46 @@ namespace Aventura.Controller
                 return new List<string> { $"Error al comunicarse con Prolog: {ex.Message}" };
             }
         }
+        // Guardar repetición
+        public async Task<string> GuardarRepeticionAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("/guardar_repeticion");
+                var jsonString = await response.Content.ReadAsStringAsync();
+                var json = JsonDocument.Parse(jsonString);
+                if (json.RootElement.TryGetProperty("mensaje", out var mensajeProp))
+                    return mensajeProp.GetString() ?? "No se pudo guardar la repetición.";
+                return "No se pudo guardar la repetición.";
+            }
+            catch (Exception ex)
+            {
+                return $"Error: {ex.Message}";
+            }
+        }
+
+        // Reproducir repetición
+        public async Task<List<string>> ReproducirRepeticionAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("/reproducir_repeticion");
+                var jsonString = await response.Content.ReadAsStringAsync();
+                var json = JsonDocument.Parse(jsonString);
+                if (json.RootElement.TryGetProperty("repeticion", out var repeticionProp) && repeticionProp.ValueKind == JsonValueKind.Array)
+                {
+                    var lista = new List<string>();
+                    foreach (var item in repeticionProp.EnumerateArray())
+                        lista.Add(item.GetString() ?? "");
+                    return lista;
+                }
+                return new List<string> { "No se encontró repetición." };
+            }
+            catch (Exception ex)
+            {
+                return new List<string> { $"Error: {ex.Message}" };
+            }
+        }
 
 
         // ==============================

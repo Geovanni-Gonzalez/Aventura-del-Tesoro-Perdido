@@ -35,6 +35,8 @@
 :- http_handler(root(donde_esta), donde_esta_handler, []).
 :- http_handler(root(puedo_ir), puedo_ir_handler, []).
 :- http_handler(root(como_gano), como_gano_handler, []).
+:- http_handler(root(guardar_repeticion), guardar_repeticion_handler, []).
+:- http_handler(root(reproducir_repeticion), reproducir_repeticion_handler, []).
 
 % ==========================
 % Iniciar Servidor
@@ -47,6 +49,21 @@ iniciar_servidor(Port) :-
 % Handlers HTTP
 % ==========================
 
+% Guardar repetición en archivo
+guardar_repeticion_handler(_Request) :-
+    findall(A, accion(A), Acciones),
+    open('repeticion.txt', write, Stream),
+    forall(member(M, Acciones), writeln(Stream, M)),
+    close(Stream),
+    reply_json_dict(_{ mensaje: 'Repetición guardada en repeticion.txt' }).
+
+% Reproducir repetición desde archivo
+reproducir_repeticion_handler(_Request) :-
+    exists_file('repeticion.txt'),
+    open('repeticion.txt', read, Stream),
+    findall(Line, read_line_to_string(Stream, Line), Lineas),
+    close(Stream),
+    reply_json_dict(_{ repeticion: Lineas }).
 
 como_gano_handler(_Request) :-
     retractall(message(_)),

@@ -62,7 +62,8 @@ tomar(Objeto) :-
     retract(inventario(Inv)),
     assert(inventario([Objeto|Inv])),
     atom_concat('Tomaste el objeto: ', Objeto, Mensaje),
-    assertz(message(Mensaje)), !.
+    assertz(message(Mensaje)),
+    registrar_accion(Mensaje), !.
 
 tomar(Objeto) :-
     atom_concat(Objeto, ' no esta en este lugar.', Mensaje),
@@ -82,7 +83,9 @@ usar(Objeto) :-
 usar(Objeto) :-
     assert(objeto_usado(Objeto)),
     atom_concat('Usaste el objeto: ', Objeto, Mensaje),
-    assertz(message(Mensaje)).
+    assertz(message(Mensaje)),
+    registrar_accion(Mensaje).
+
 
 mover(Destino) :-
     jugador(Desde),
@@ -102,7 +105,8 @@ mover(Destino) :-
     assert(jugador(Destino)),
     (lugar_visitado(Destino) -> true ; assert(lugar_visitado(Destino))),
     atom_concat('Te moviste a ', Destino, Mensaje),
-    assertz(message(Mensaje)).
+    assertz(message(Mensaje)),
+    registrar_accion(Mensaje).
 
 % ---- Rutas y Victoria ----
 
@@ -145,3 +149,7 @@ verifica_gane :-
 verifica_gane :-
     Mensaje = 'Aun no cumples las condiciones para ganar.',
     assertz(message(Mensaje)).
+
+% Registrar acción en la repetición
+registrar_accion(Accion) :-
+    assertz(accion(Accion)).
