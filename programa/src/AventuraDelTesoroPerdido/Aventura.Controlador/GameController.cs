@@ -106,7 +106,7 @@ namespace Aventura.Controller
             {
                 var response = await _httpClient.GetStringAsync("/donde_estoy");
                 var json = JsonDocument.Parse(response);
-                return json.RootElement.GetProperty("message").GetString() ?? "(Sin mensaje)";
+                return json.RootElement.GetProperty("mensaje").GetString() ?? "(Sin mensaje)";
             }
             catch (Exception ex)
             {
