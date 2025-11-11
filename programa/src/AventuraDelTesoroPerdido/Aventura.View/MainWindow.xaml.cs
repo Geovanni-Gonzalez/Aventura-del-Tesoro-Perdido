@@ -36,7 +36,7 @@ namespace Aventura.View
 
         private void ActualizarUI_OnGameStateUpdated(GameState estado)
         {
-            EstadoTxt.Text = $"📍 Lugar: {estado.ubicacion ?? "Desconocido"}";
+            EstadoTxt.Text = $"Lugar: {estado.ubicacion ?? "Desconocido"}";
 
             // Inventario
             LstInventario.ItemsSource = null;
@@ -65,8 +65,8 @@ namespace Aventura.View
         {
             var inv = gameController.Estado.inventario;
             string mensaje = inv != null && inv.Count > 0
-                ? $"🎒 Inventario: {string.Join(", ", inv)}"
-                : "🎒 Inventario vacío.";
+                ? $"Inventario: {string.Join(", ", inv)}"
+                : "Inventario vacío.";
             MostrarMensaje(mensaje);
         }
 
@@ -121,9 +121,9 @@ namespace Aventura.View
             var lugares = await gameController.ObtenerLugaresVisitadosAsync();
 
             if (lugares == null || lugares.Count == 0)
-                MostrarMensaje("📍 Aún no has visitado ningún lugar.");
+                MostrarMensaje("Aún no has visitado ningún lugar.");
             else
-                MostrarMensaje($"🏞️ Lugares visitados:\n{string.Join(", ", lugares)}");
+                MostrarMensaje($"Lugares visitados:\n{string.Join(", ", lugares)}");
         }
 
         // 🧭 Objetos en el lugar actual
@@ -132,9 +132,9 @@ namespace Aventura.View
             var objetos = await gameController.ObtenerObjetosEnLugarAsync();
 
             if (objetos == null || objetos.Count == 0)
-                MostrarMensaje("📦 No hay objetos visibles en este lugar.");
+                MostrarMensaje("No hay objetos visibles en este lugar.");
             else
-                MostrarMensaje($"🧭 Objetos en {gameController.Estado.ubicacion}:\n{string.Join(", ", objetos)}");
+                MostrarMensaje($"Objetos en {gameController.Estado.ubicacion}:\n{string.Join(", ", objetos)}");
         }
 
         // 🔁 Reiniciar juego
@@ -155,7 +155,7 @@ namespace Aventura.View
         private void CmbMover_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (CmbMover.SelectedItem is string destino)
-                EstadoTxt.Text = $"➡️ Vas hacia: {destino}";
+                EstadoTxt.Text = $"Vas hacia: {destino}";
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -207,8 +207,8 @@ namespace Aventura.View
         {
             var inventario = await gameController.ObtenerInventarioAsync();
             string mensaje = (inventario != null && inventario.Count > 0)
-                ? $"🎒 Inventario actual:\n{string.Join(", ", inventario)}"
-                : "🎒 Inventario vacío.";
+                ? $"Inventario actual:\n{string.Join(", ", inventario)}"
+                : "Inventario vacío.";
             MostrarMensaje(mensaje);
         }
 
@@ -245,7 +245,7 @@ namespace Aventura.View
         {
             var instrucciones = await gameController.ComoGanoAsync();
             string mensaje = (instrucciones != null && instrucciones.Count > 0)
-                ? $"🏆 Cómo ganar:\n{string.Join("\n", instrucciones)}"
+                ? $"Cómo ganar:\n{string.Join("\n", instrucciones)}"
                 : "No hay instrucciones disponibles.";
             MostrarMensaje(mensaje);
         }

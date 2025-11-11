@@ -21,6 +21,10 @@
 % ==========================
 % Puntos de entrada HTTP
 % ==========================
+% Nombre: http_handler/3 (multiples usos)
+% Entrada: Ruta (root/Nombre), PredicadoHandler, Opciones
+% Salida: Registro interno del dispatcher HTTP
+% Descripcion: Asocia cada ruta HTTP con el predicado que construye la respuesta JSON.
 :- http_handler(root(estado), obtener_estado, []).
 :- http_handler(root(mover), mover_lugar, []).
 :- http_handler(root(usar), usar_objeto, []).
@@ -39,15 +43,22 @@
 % ==========================
 % Iniciar Servidor
 % ==========================
+% Nombre: iniciar_servidor/1
+% Entrada: Port (número entero)
+% Salida: Servidor HTTP escuchando en el puerto indicado
+% Descripcion: Inicializa el servidor HTTP usando el dispatcher de librería.
 iniciar_servidor(Port) :-
     http_server(http_dispatch, [port(Port)]),
-    format('✅ Servidor Prolog iniciado en puerto ~w~n', [Port]).
+    format('Servidor Prolog iniciado en puerto ~w~n', [Port]).
 
 % ==========================
 % Handlers HTTP
 % ==========================
 
-
+% Nombre: como_gano_handler/1
+% Entrada: _Request (diccionario de la petición HTTP)
+% Salida: Respuesta JSON con lista de mensajes (mensajes)
+% Descripcion: Invoca el predicado como_gano y devuelve todos los mensajes acumulados.
 como_gano_handler(_Request) :-
     retractall(message(_)),
     como_gano,
@@ -55,6 +66,10 @@ como_gano_handler(_Request) :-
     reply_json_dict(_{ mensajes: Mensajes }).
 
 % --- Estado general ---
+% Nombre: obtener_estado/1
+% Entrada: _Request
+% Salida: JSON con ubicacion, inventario, visitados
+% Descripcion: Expone el estado actual del jugador y lugares visitados.
 obtener_estado(_Request) :-
     jugador(Lugar),
     inventario(Inv),
@@ -66,6 +81,10 @@ obtener_estado(_Request) :-
     }).
 
 % --- Mover al jugador ---
+% Nombre: mover_lugar/1
+% Entrada: Request (debe contener destino)
+% Salida: JSON con resultado ("ok") y mensaje (texto)
+% Descripcion: Convierte el destino recibido a átomo, ejecuta mover/1 y devuelve el mensaje.
 mover_lugar(Request) :-
     http_read_json_dict(Request, Data),
     ( _{ destino: DestinoStr } :< Data ->
@@ -78,6 +97,10 @@ mover_lugar(Request) :-
     ).
 
 % --- Usar objeto ---
+% Nombre: usar_objeto/1
+% Entrada: Request (debe contener objeto)
+% Salida: JSON con resultado ("ok") y mensaje
+% Descripcion: Ejecuta usar/1 para el objeto indicado y devuelve el mensaje generado.
 usar_objeto(Request) :-
     http_read_json_dict(Request, Data),
     ( _{ objeto: ObjetoStr } :< Data ->
@@ -90,6 +113,10 @@ usar_objeto(Request) :-
     ).
 
 % --- Tomar objeto ---
+% Nombre: tomar_objeto/1
+% Entrada: Request (debe contener objeto)
+% Salida: JSON con resultado ("ok") y mensaje
+% Descripcion: Toma un objeto del lugar actual si existe y responde con el resultado.
 tomar_objeto(Request) :-
     http_read_json_dict(Request, Data),
     ( _{ objeto: ObjetoStr } :< Data ->
@@ -102,6 +129,10 @@ tomar_objeto(Request) :-
     ).
 
 % --- Verificar gane ---
+% Nombre: verifica_gane/1
+% Entrada: _Request
+% Salida: JSON con mensaje (estado de victoria)
+% Descripcion: Ejecuta verifica_gane/0 para confirmar si se alcanzó la condición de victoria.
 verifica_gane(_Request) :-
     retractall(message(_)),
     verifica_gane,
@@ -109,6 +140,10 @@ verifica_gane(_Request) :-
     reply_json_dict(_{ mensaje: MensajeStr }).
 
 % --- Donde estoy ---
+% Nombre: donde_estoy_handler/1
+% Entrada: _Request
+% Salida: JSON con mensaje (ubicación actual)
+% Descripcion: Devuelve el lugar actual del jugador usando donde_estoy/0.
 donde_estoy_handler(_Request) :-
     retractall(message(_)),
     donde_estoy,
@@ -116,6 +151,10 @@ donde_estoy_handler(_Request) :-
     reply_json_dict(_{ mensaje: MensajeStr }).
 
 % --- Que tengo ---
+% Nombre: que_tengo_handler/1
+% Entrada: _Request
+% Salida: JSON con mensaje (inventario)
+% Descripcion: Informa el inventario del jugador mediante que_tengo/0.
 que_tengo_handler(_Request) :-
     retractall(message(_)),
     que_tengo,
@@ -123,6 +162,10 @@ que_tengo_handler(_Request) :-
     reply_json_dict(_{ mensaje: MensajeStr }).
 
 % --- Donde esta objeto ---
+% Nombre: donde_esta_handler/1
+% Entrada: Request (debe contener objeto)
+% Salida: JSON con mensaje (localización del objeto)
+% Descripcion: Indica dónde se encuentra un objeto (inventario o mapa).
 donde_esta_handler(Request) :-
     http_read_json_dict(Request, Data),
     ( _{ objeto: ObjetoStr } :< Data ->
@@ -135,6 +178,10 @@ donde_esta_handler(Request) :-
     ).
 
 % --- Puedo ir ---
+% Nombre: puedo_ir_handler/1
+% Entrada: Request (debe contener destino)
+% Salida: JSON con mensaje (resultado verificación)
+% Descripcion: Valida si el jugador puede moverse a un destino según reglas y requisitos.
 puedo_ir_handler(Request) :-
     http_read_json_dict(Request, Data),
     ( _{ destino: DestinoStr } :< Data ->
@@ -147,6 +194,10 @@ puedo_ir_handler(Request) :-
     ).
 
 % --- Caminos ---
+% Nombre: caminos/1
+% Entrada: _Request
+% Salida: JSON con lista de caminos (caminos)
+% Descripcion: Devuelve los destinos directamente conectados al lugar actual del jugador.
 caminos(_Request) :-
     jugador(UbicacionActual),
     findall(DestinoStr,
@@ -157,17 +208,29 @@ caminos(_Request) :-
     reply_json_dict(_{ caminos: LugaresConectados }).
 
 % --- Lugares visitados ---
+% Nombre: visitados/1
+% Entrada: _Request
+% Salida: JSON con lista de lugares visitados (visitados)
+% Descripcion: Lista todos los lugares que el jugador ha visitado hasta el momento.
 visitados(_Request) :-
     findall(L, lugar_visitado(L), Lista),
     reply_json_dict(_{ visitados: Lista }).
 
 % --- Objetos en lugar ---
+% Nombre: objetos_lugar/1
+% Entrada: _Request
+% Salida: JSON con lista de objetos en el lugar actual (objetos)
+% Descripcion: Devuelve los objetos situados en la ubicación actual del jugador.
 objetos_lugar(_Request) :-
     jugador(Lugar),
     findall(O, objeto(O, Lugar), Objetos),
     reply_json_dict(_{ objetos: Objetos }).
 
 % --- Reiniciar juego ---
+% Nombre: reiniciar_juego/1
+% Entrada: _Request
+% Salida: JSON con resultado y mensaje
+% Descripcion: Restablece el estado del juego a sus valores iniciales.
 reiniciar_juego(_Request) :-
     reiniciar_estado,
     reply_json_dict(_{ resultado: "ok", mensaje: "Juego reiniciado correctamente." }).
@@ -175,6 +238,10 @@ reiniciar_juego(_Request) :-
 % ==========================
 % Reinicio del estado
 % ==========================
+% Nombre: reiniciar_estado/0
+% Entrada: (ninguna)
+% Salida: Estado interno reiniciado (hechos dinámicos restaurados)
+% Descripcion: Limpia todos los hechos mutables y reestablece la posición e inventario inicial.
 reiniciar_estado :-
     retractall(jugador(_)),
     retractall(inventario(_)),
@@ -189,4 +256,8 @@ reiniciar_estado :-
 % ==========================
 % Inicialización
 % ==========================
+% Nombre: initialization/1
+% Entrada: Goal (iniciar_servidor(5000))
+% Salida: Ejecución de Goal al cargar el archivo
+% Descripcion: Arranca automáticamente el servidor HTTP en el puerto 5000.
 :- initialization(iniciar_servidor(5000)).

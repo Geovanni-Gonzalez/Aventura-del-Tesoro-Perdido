@@ -9,14 +9,31 @@ using Aventura.Model;
 
 namespace Aventura.Controller
 {
+    // Nombre: GameController
+    // Entrada: (N/A) Instanciación opcional sin parámetros.
+    // Salida: Objeto controlador del estado y acciones del juego.
+    // Descripcion: Encapsula llamadas HTTP al servidor Prolog, mantiene un GameState local y expone métodos async para acciones y consultas.
     public class GameController
     {
         private readonly HttpClient _httpClient;
         private readonly string _urlBase;
 
+        // Nombre: Estado
+        // Entrada: (asignado internamente tras peticiones)
+        // Salida: Instancia GameState con ubicación, inventario, visitados, objetos y caminos.
+        // Descripcion: Representa el estado actual cacheado del juego en el cliente.
         public GameState Estado { get; private set; } = new GameState();
+
+        // Nombre: OnGameStateUpdated
+        // Entrada: Delegate Action<GameState> suscrito externamente.
+        // Salida: Evento disparado tras actualizar el estado.
+        // Descripcion: Notifica a la UI u otros componentes que el estado cambió.
         public event Action<GameState> OnGameStateUpdated;
 
+        // Nombre: GameController (constructor)
+        // Entrada: (ninguna)
+        // Salida: Instancia inicializada con HttpClient apuntando al servidor Prolog local.
+        // Descripcion: Configura la URL base y el cliente HTTP reutilizable.
         public GameController()
         {
             _urlBase = "http://localhost:5000"; // Servidor Prolog HTTP
@@ -29,6 +46,11 @@ namespace Aventura.Controller
         // ==============================
         // Actualizar estado general
         // ==============================
+
+        // Nombre: ActualizarEstadoAsync
+        // Entrada: (ninguna)
+        // Salida: Task (actualiza Estado y dispara evento)
+        // Descripcion: Obtiene /estado del servidor, parsea JSON y sincroniza el estado local.
         public async Task ActualizarEstadoAsync()
         {
             try
@@ -50,13 +72,18 @@ namespace Aventura.Controller
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error al actualizar estado: {ex.Message}");
+                Console.WriteLine($"Error al actualizar estado: {ex.Message}");
             }
         }
 
         // ==============================
-        // 🧭 Acciones de juego
+        // Acciones de juego
         // ==============================
+
+        // Nombre: MoverAsync
+        // Entrada: destino (string)
+        // Salida: Task<string> mensaje retornado por el servidor
+        // Descripcion: Solicita mover al jugador al destino y refresca el estado.
         public async Task<string> MoverAsync(string destino)
         {
             var body = new { destino=destino };
@@ -65,7 +92,10 @@ namespace Aventura.Controller
             return mensaje;
         }
 
-
+        // Nombre: UsarAsync
+        // Entrada: objeto (string)
+        // Salida: Task<string> mensaje de resultado
+        // Descripcion: Intenta usar un objeto del inventario y refresca estado.
         public async Task<string> UsarAsync(string objeto)
         {
             var body = new { objeto };
@@ -74,6 +104,10 @@ namespace Aventura.Controller
             return mensaje;
         }
 
+        // Nombre: TomarAsync
+        // Entrada: objeto (string)
+        // Salida: Task<string> mensaje de resultado
+        // Descripcion: Solicita tomar un objeto del lugar actual y actualiza estado.
         public async Task<string> TomarAsync(string objeto)
         {
             if (string.IsNullOrWhiteSpace(objeto))
@@ -85,6 +119,10 @@ namespace Aventura.Controller
             return resultado;
         }
 
+        // Nombre: ReiniciarJuegoAsync
+        // Entrada: (ninguna)
+        // Salida: Task<string> mensaje de reinicio o error
+        // Descripcion: Llama al endpoint de reinicio y refresca estado inicial.
         public async Task<string> ReiniciarJuegoAsync()
         {
             try
@@ -97,9 +135,14 @@ namespace Aventura.Controller
             }
             catch (Exception ex)
             {
-                return $"❌ Error al reiniciar: {ex.Message}";
+                return $"Error al reiniciar: {ex.Message}";
             }
         }
+
+        // Nombre: DondeEstoyAsync
+        // Entrada: (ninguna)
+        // Salida: Task<string> mensaje con ubicación actual
+        // Descripcion: Consulta textual de la ubicación mediante endpoint donde_estoy.
         public async Task<string> DondeEstoyAsync()
         {
             try
@@ -110,10 +153,14 @@ namespace Aventura.Controller
             }
             catch (Exception ex)
             {
-                return $"❌ Error al obtener ubicación: {ex.Message}";
+                return $"Error al obtener ubicación: {ex.Message}";
             }
         }
 
+        // Nombre: ObtenerInventarioAsync
+        // Entrada: (ninguna)
+        // Salida: Task<List<string>> lista de objetos en inventario
+        // Descripcion: Recupera inventario completo desde /estado (sin alterar eventos).
         public async Task<List<string>> ObtenerInventarioAsync()
         {
             var response = await _httpClient.GetStringAsync($"{_urlBase}/estado");
@@ -128,6 +175,10 @@ namespace Aventura.Controller
         }
 
 
+        // Nombre: ObtenerTodosLosObjetosAsync
+        // Entrada: (ninguna)
+        // Salida: Task<List<string>> unión de inventario y objetos en el lugar
+        // Descripcion: Combina objetos del lugar actual con los del inventario (distintos).
         public async Task<List<string>> ObtenerTodosLosObjetosAsync()
         {
             var enLugar = await ObtenerObjetosEnLugarAsync();
@@ -136,23 +187,33 @@ namespace Aventura.Controller
             return todos;
         }
 
+        // Nombre: DondeEstaAsync
+        // Entrada: objeto (string)
+        // Salida: Task<string> mensaje sobre ubicación del objeto
+        // Descripcion: Consulta al servidor para saber dónde se encuentra un objeto.
         public async Task<string> DondeEstaAsync(string objeto)
         {
             var body = new { objeto };
             return await PostJsonAsync($"{_urlBase}/donde_esta", body);
         }
+
+        // Nombre: PuedoIrAsync
+        // Entrada: destino (string)
+        // Salida: Task<string> mensaje de verificación
+        // Descripcion: Verifica si el jugador podría desplazarse al destino sin moverlo.
         public async Task<string> PuedoIrAsync(string destino)
         {
             var body = new { destino };
             return await PostJsonAsync($"{_urlBase}/puedo_ir", body);
         }
         // ==============================
-        // 🔍 Consultas especiales
+        // Consultas especiales
         // ==============================
 
-        /// <summary>
-        /// Devuelve la lista de lugares visitados por el jugador.
-        /// </summary>
+        // Nombre: ObtenerLugaresVisitadosAsync
+        // Entrada: (ninguna)
+        // Salida: Task<List<string>> lista de lugares visitados
+        // Descripcion: Sincroniza y devuelve los lugares visitados desde el servidor.
         public async Task<List<string>> ObtenerLugaresVisitadosAsync()
         {
             try
@@ -173,14 +234,15 @@ namespace Aventura.Controller
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error al obtener lugares visitados: {ex.Message}");
+                Console.WriteLine($"Error al obtener lugares visitados: {ex.Message}");
                 return new List<string>();
             }
         }
 
-        /// <summary>
-        /// Devuelve los objetos que están en el lugar actual del jugador.
-        /// </summary>
+        // Nombre: ObtenerObjetosEnLugarAsync
+        // Entrada: (ninguna)
+        // Salida: Task<List<string>> objetos presentes en la ubicación actual
+        // Descripcion: Consulta /objetos_lugar y actualiza la caché local.
         public async Task<List<string>> ObtenerObjetosEnLugarAsync()
         {
             try
@@ -201,11 +263,15 @@ namespace Aventura.Controller
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error al obtener objetos del lugar: {ex.Message}");
+                Console.WriteLine($"Error al obtener objetos del lugar: {ex.Message}");
                 return new List<string>();
             }
         }
 
+        // Nombre: ObtenerCaminosAsync
+        // Entrada: (ninguna)
+        // Salida: Task<List<string>> destinos conectados
+        // Descripcion: Recupera caminos posibles desde la ubicación actual y actualiza estado.
         public async Task<List<string>> ObtenerCaminosAsync()
         {
             try
@@ -227,11 +293,15 @@ namespace Aventura.Controller
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error al obtener caminos: {ex.Message}");
+                Console.WriteLine($"Error al obtener caminos: {ex.Message}");
                 return new List<string>();
             }
         }
 
+        // Nombre: VerificarGaneAsync
+        // Entrada: (ninguna)
+        // Salida: Task<string> mensaje indicando si ganó o no
+        // Descripcion: Llama a /verifica_gane para evaluar condición de victoria.
         public async Task<string> VerificarGaneAsync()
         {
             try
@@ -242,11 +312,14 @@ namespace Aventura.Controller
             }
             catch (Exception ex)
             {
-                return $"❌ Error al verificar gane: {ex.Message}";
+                return $"Error al verificar gane: {ex.Message}";
             }
         }
 
-
+        // Nombre: ComoGanoAsync
+        // Entrada: (ninguna)
+        // Salida: Task<List<string>> lista de mensajes con objetivos/rutas
+        // Descripcion: Consulta /como_gano para obtener consejos de victoria.
         public async Task<List<string>> ComoGanoAsync()
         {
             try
@@ -280,8 +353,13 @@ namespace Aventura.Controller
 
 
         // ==============================
-        // ⚙️ Utilidades HTTP
+        // Utilidades HTTP
         // ==============================
+
+        // Nombre: PostJsonAsync
+        // Entrada: url (string), data (object anónimo serializable)
+        // Salida: Task<string> mensaje interpretado del JSON o error
+        // Descripcion: Envía POST JSON, parsea respuesta y extrae campos estándar (mensaje/resultado/error).
         private async Task<string> PostJsonAsync(string url, object data)
         {
             try
@@ -317,7 +395,7 @@ namespace Aventura.Controller
 
                         // Si solo hay "error"
                         if (root.TryGetProperty("error", out var errorProp))
-                            return $"❌ Error del servidor: {errorProp.GetString()}";
+                            return $"Error del servidor: {errorProp.GetString()}";
 
                         // Si no hay nada reconocido, retorna JSON crudo
                         return jsonString;
@@ -326,12 +404,12 @@ namespace Aventura.Controller
                 catch (JsonException)
                 {
                     // Si la respuesta no es JSON válido
-                    return $"❌ Respuesta no JSON: {jsonString}";
+                    return $"Respuesta no JSON: {jsonString}";
                 }
             }
             catch (Exception ex)
             {
-                return $"❌ Error al comunicarse con Prolog: {ex.Message}";
+                return $"Error al comunicarse con Prolog: {ex.Message}";
             }
         }
 
