@@ -6,6 +6,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Configuration;
 
 namespace Aventura.View
 {
@@ -28,9 +30,27 @@ namespace Aventura.View
         public MainWindow()
         {
             InitializeComponent();
-            gameController = new GameController();
+            string serverUrl = ConfigurationManager.AppSettings["PrologServerUrl"] ?? "http://localhost:5000";
+            gameController = new GameController(serverUrl);
             gameController.OnGameStateUpdated += ActualizarUI_OnGameStateUpdated;
             CargarEstadoInicialAsync();
+            IniciarTimerConexion();
+        }
+
+        // Nombre: IniciarTimerConexion
+        // Entrada: (ninguna)
+        // Salida: (void)
+        // Descripcion: Configura un timer que revisa el estado del servidor cada 5 segundos.
+        private void IniciarTimerConexion()
+        {
+            System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();
+            timer.Interval = TimeSpan.FromSeconds(5);
+            timer.Tick += async (s, e) =>
+            {
+                bool conectado = await gameController.PingAsync();
+                ConnectionStatusLed.Fill = conectado ? System.Windows.Media.Brushes.Lime : System.Windows.Media.Brushes.Red;
+            };
+            timer.Start();
         }
 
         // Nombre: CargarEstadoInicialAsync
@@ -58,299 +78,412 @@ namespace Aventura.View
         {
             EstadoTxt.Text = $"Lugar: {estado.ubicacion ?? "Desconocido"}";
 
-            // Inventario
+            // Actualizar Inventario
             LstInventario.ItemsSource = null;
             LstInventario.ItemsSource = estado.inventario ?? new List<string>();
 
-            // Combos dinámicos
-            CmbMover.ItemsSource = estado.caminosPosibles ?? new List<string>();
-            CmbUsar.ItemsSource = estado.inventario ?? new List<string>();
-            CmbTomar.ItemsSource = estado.objetosEnLugar ?? new List<string>();
+            // Actualizar Combos y Botones Inteligentes
+            ActualizarControlesInteligentes(estado);
+
+            // Verificar cambio de ubicación para animar
+            if (_ultimaUbicacion != estado.ubicacion)
+            {
+                AnimarViaje(estado.ubicacion);
+                _ultimaUbicacion = estado.ubicacion;
+            }
+            else
+            {
+                // Carga inicial o refresh sin movimiento
+                ActualizarFondoMapa(estado.ubicacion);
+            }
         }
 
-        // Nombre: MostrarMensaje
+        private string _ultimaUbicacion; // Para detectar cambios
+
+        private void ActualizarControlesInteligentes(GameState estado)
+        {
+            // MOVER
+            var caminos = estado.caminosPosibles ?? new List<string>();
+            CmbMover.ItemsSource = caminos;
+            CmbMover.IsEnabled = caminos.Any();
+            BtnMover.IsEnabled = caminos.Any();
+            if (caminos.Any()) CmbMover.SelectedIndex = 0; // Auto-select
+
+            // TOMAR
+            var objetosLugar = estado.objetosEnLugar ?? new List<string>();
+            CmbTomar.ItemsSource = objetosLugar;
+            CmbTomar.IsEnabled = objetosLugar.Any();
+            BtnTomar.IsEnabled = objetosLugar.Any();
+            if (objetosLugar.Any()) CmbTomar.SelectedIndex = 0;
+
+            // USAR
+            var inventario = estado.inventario ?? new List<string>();
+            CmbUsar.ItemsSource = inventario;
+            CmbUsar.IsEnabled = inventario.Any();
+            BtnUsar.IsEnabled = inventario.Any();
+            if (inventario.Any()) CmbUsar.SelectedIndex = 0;
+        }
+
+        private void AnimarViaje(string nuevaUbicacion)
+        {
+            // 1. Salida (Slide hacia derecha + Fade Out)
+            var animSalidaX = new System.Windows.Media.Animation.DoubleAnimation(82, 400, TimeSpan.FromSeconds(0.4));
+            var animSalidaOpacidad = new System.Windows.Media.Animation.DoubleAnimation(1, 0, TimeSpan.FromSeconds(0.4));
+
+            animSalidaX.Completed += (s, e) =>
+            {
+                // 2. Cambiar Fondo (al terminar la salida)
+                ActualizarFondoMapa(nuevaUbicacion);
+
+                // 3. Preparar Entrada (Resetear posición a izquierda)
+                Canvas.SetLeft(PersonajeImg, -100);
+
+                // 4. Entrada (Slide desde izquierda + Fade In)
+                var animEntradaX = new System.Windows.Media.Animation.DoubleAnimation(-100, 82, TimeSpan.FromSeconds(0.4));
+                var animEntradaOpacidad = new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromSeconds(0.4));
+
+                // Configurar easing para efecto más suave
+                animEntradaX.EasingFunction = new System.Windows.Media.Animation.QuadraticEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut };
+
+                PersonajeImg.BeginAnimation(Canvas.LeftProperty, animEntradaX);
+                PersonajeImg.BeginAnimation(UIElement.OpacityProperty, animEntradaOpacidad);
+            };
+
+            PersonajeImg.BeginAnimation(Canvas.LeftProperty, animSalidaX);
+            PersonajeImg.BeginAnimation(UIElement.OpacityProperty, animSalidaOpacidad);
+        }
+
+        private void ActualizarFondoMapa(string lugar)
+        {
+            try
+            {
+                // [User Request] Usar el mismo fondo siempre (bosque.jpg)
+                string imagePath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Lugar", "bosque.jpg");
+
+                if (System.IO.File.Exists(imagePath))
+                {
+                    var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.UriSource = new Uri(imagePath);
+                    bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                    bitmap.EndInit();
+
+                    // Si la imagen ya es la misma, tal vez no necesitamos animar el fondo, 
+                    // pero mantenemos la lógica para asegurar que se muestre.
+                    MapBackgroundBrush.ImageSource = bitmap;
+                    
+                    // Asegurar opacidad por si acaso
+                    MapBackgroundBrush.Opacity = 1;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error cargando imagen: {ex.Message}");
+            }
+        }
+
+        // Nombre: MostrarMensaje (REFACTORIZADO)
         // Entrada: mensaje (string)
-        // Salida: (void) muestra diálogo si procede
-        // Descripcion: Helper para mostrar mensajes filtrando vacíos o "(Sin mensaje)".
+        // Salida: (void)
+        // Descripcion: Agrega el mensaje a la bitácora en lugar de mostrar un popup.
         private void MostrarMensaje(string mensaje)
         {
             if (!string.IsNullOrWhiteSpace(mensaje) && !mensaje.Equals("(Sin mensaje)"))
-                MessageBox.Show(mensaje);
+            {
+                AgregarLog(mensaje);
+            }
         }
 
-        // Nombre: BtnRefrescar_Click
-        // Entrada: sender, e (evento WPF)
-        // Salida: (void) asincrónico
-        // Descripcion: Solicita actualización del estado al servidor.
-        private async void BtnRefrescar_Click(object sender, RoutedEventArgs e)
-        {
-            await gameController.ActualizarEstadoAsync();
-        }
-
-        // Nombre: BtnInventario_Click
-        // Entrada: sender, e
+        // Nombre: AgregarLog
+        // Entrada: mensaje (string)
         // Salida: (void)
-        // Descripcion: Muestra el inventario actual en un cuadro de mensaje.
+        // Descripcion: Agrega una línea a la bitácora visual con timestamp.
+        private void AgregarLog(string mensaje)
+        {
+            string time = DateTime.Now.ToString("HH:mm:ss");
+            if (TxtLog != null)
+            {
+                TxtLog.Text = $"[{time}] {mensaje}\n\n" + TxtLog.Text;
+            }
+        }
+
+        // Nombre: EjecutarTareaAsync
+        // Entrada: funcionAsync (Func<Task>)
+        // Salida: (void)
+        // Descripcion: Wrapper para ejecutar tareas asincrónicas manejando estado de ocupado y errores.
+        private async void EjecutarTareaAsync(Func<Task> funcionAsync)
+        {
+            try
+            {
+                IsEnabled = false; // Bloquear UI
+                Mouse.OverrideCursor = Cursors.Wait; // Cursor de espera
+                await funcionAsync();
+            }
+            catch (Exception ex)
+            {
+                MostrarMensaje($"Error: {ex.Message}");
+            }
+            finally
+            {
+                IsEnabled = true; // Desbloquear UI
+                Mouse.OverrideCursor = null; // Restaurar cursor
+            }
+        }
+
+        // --------------------------------------------------------------------------------
+        // HANDLERS DE BOTONES (Refactorizados para usar EjecutarTareaAsync)
+        // --------------------------------------------------------------------------------
+
+        private void BtnRefrescar_Click(object sender, RoutedEventArgs e)
+        {
+            EjecutarTareaAsync(async () => await gameController.ActualizarEstadoAsync());
+        }
+
         private void BtnInventario_Click(object sender, RoutedEventArgs e)
         {
             var inv = gameController.Estado.inventario;
             string mensaje = inv != null && inv.Count > 0
                 ? $"Inventario: {string.Join(", ", inv)}"
-                : "Inventario vacío.";
+                : "Tu inventario está vacío.";
             MostrarMensaje(mensaje);
         }
 
-        // Nombre: BtnMover_Click
-        // Entrada: sender, e
-        // Salida: (void) asincrónico
-        // Descripcion: Envía la acción de mover al destino seleccionado y refresca estado.
-        private async void BtnMover_Click(object sender, RoutedEventArgs e)
+        private void BtnMover_Click(object sender, RoutedEventArgs e)
         {
-            if (CmbMover.SelectedItem is string destino)
+            EjecutarTareaAsync(async () =>
             {
-                string resultado = await gameController.MoverAsync(destino);
-                MostrarMensaje(resultado);
-                await gameController.ActualizarEstadoAsync();
-            }
-            else
-            {
-                MostrarMensaje("Selecciona un destino.");
-            }
+                if (CmbMover.SelectedItem is string destino)
+                {
+                    string resultado = await gameController.MoverAsync(destino);
+                    MostrarMensaje(resultado);
+                    await gameController.ActualizarEstadoAsync();
+                }
+                else
+                {
+                    MostrarMensaje("Selecciona un destino pálido.");
+                }
+            });
         }
 
 
-        // Nombre: BtnTomar_Click
-        // Entrada: sender, e
-        // Salida: (void) asincrónico
-        // Descripcion: Intenta tomar el objeto seleccionado en el ComboBox.
-        private async void BtnTomar_Click(object sender, RoutedEventArgs e)
+        private void BtnTomar_Click(object sender, RoutedEventArgs e)
         {
-            if (CmbTomar.SelectedItem is string objeto)
+            EjecutarTareaAsync(async () =>
             {
-                string resultado = await gameController.TomarAsync(objeto);
-                MostrarMensaje(resultado);
-            }
-            else
+                if (CmbTomar.SelectedItem is string objeto)
+                {
+                    string resultado = await gameController.TomarAsync(objeto);
+                    MostrarMensaje(resultado);
+                    await gameController.ActualizarEstadoAsync(); // Actualizar para remover objeto de lista
+                }
+                else
+                {
+                    MostrarMensaje("Selecciona un objeto para tomar.");
+                }
+            });
+        }
+
+        private void BtnUsar_Click(object sender, RoutedEventArgs e)
+        {
+            EjecutarTareaAsync(async () =>
             {
-                MostrarMensaje("Selecciona un objeto para tomar.");
-            }
+                if (CmbUsar.SelectedItem is string objeto)
+                {
+                    string resultado = await gameController.UsarAsync(objeto);
+                    MostrarMensaje(resultado);
+                    await gameController.ActualizarEstadoAsync();
+                }
+                else
+                {
+                    MostrarMensaje("Selecciona un objeto para usar.");
+                }
+            });
         }
 
-        // Nombre: BtnUsar_Click
-        // Entrada: sender, e
-        // Salida: (void) asincrónico
-        // Descripcion: Usa el objeto seleccionado del inventario y actualiza estado.
-        private async void BtnUsar_Click(object sender, RoutedEventArgs e)
+        private void BtnLugaresVisitados_Click(object sender, RoutedEventArgs e)
         {
-            if (CmbUsar.SelectedItem is string objeto)
+            EjecutarTareaAsync(async () =>
             {
-                string resultado = await gameController.UsarAsync(objeto);
-                MostrarMensaje(resultado);
-                await gameController.ActualizarEstadoAsync();
-            }
-            else
+                var lugares = await gameController.ObtenerLugaresVisitadosAsync();
+                if (lugares == null || lugares.Count == 0)
+                    MostrarMensaje("Aún no has visitado ningún lugar.");
+                else
+                    MostrarMensaje($"Lugares visitados: {string.Join(", ", lugares)}");
+            });
+        }
+
+        private void BtnObjetosLugar_Click(object sender, RoutedEventArgs e)
+        {
+             // Este botón parece no existir en la UI XAML actual, pero lo mantenemos por compatibilidad si se agrega
+            EjecutarTareaAsync(async () =>
             {
-                MostrarMensaje("Selecciona un objeto para usar.");
-            }
+                var objetos = await gameController.ObtenerObjetosEnLugarAsync();
+                MostrarMensaje(objetos != null && objetos.Any() ? $"Objetos aquí: {string.Join(", ", objetos)}" : "No hay objetos visibles.");
+            });
         }
 
-        // Nombre: BtnLugaresVisitados_Click
-        // Entrada: sender, e
-        // Salida: (void) asincrónico
-        // Descripcion: Consulta la lista de lugares visitados y la muestra.
-        private async void BtnLugaresVisitados_Click(object sender, RoutedEventArgs e)
+        private void BtnReiniciar_Click(object sender, RoutedEventArgs e)
         {
-            var lugares = await gameController.ObtenerLugaresVisitadosAsync();
-
-            if (lugares == null || lugares.Count == 0)
-                MostrarMensaje("Aún no has visitado ningún lugar.");
-            else
-                MostrarMensaje($"Lugares visitados:\n{string.Join(", ", lugares)}");
+            EjecutarTareaAsync(async () =>
+            {
+                if (MessageBox.Show("¿Seguro que quieres reiniciar?", "Reiniciar", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                {
+                    string resultado = await gameController.ReiniciarJuegoAsync();
+                    MostrarMensaje(resultado);
+                    await gameController.ActualizarEstadoAsync();
+                    if(TxtLog != null) TxtLog.Text = ""; // Limpiar log
+                    AgregarLog("--- JUEGO REINICIADO ---");
+                }
+            });
         }
 
-        // Nombre: BtnObjetosLugar_Click
-        // Entrada: sender, e
-        // Salida: (void) asincrónico
-        // Descripcion: Muestra los objetos disponibles en la ubicación actual.
-        private async void BtnObjetosLugar_Click(object sender, RoutedEventArgs e)
-        {
-            var objetos = await gameController.ObtenerObjetosEnLugarAsync();
-
-            if (objetos == null || objetos.Count == 0)
-                MostrarMensaje("No hay objetos visibles en este lugar.");
-            else
-                MostrarMensaje($"Objetos en {gameController.Estado.ubicacion}:\n{string.Join(", ", objetos)}");
-        }
-
-        // Nombre: BtnReiniciar_Click
-        // Entrada: sender, e
-        // Salida: (void) asincrónico
-        // Descripcion: Reinicia el juego y sincroniza nuevo estado.
-        private async void BtnReiniciar_Click(object sender, RoutedEventArgs e)
-        {
-            string resultado = await gameController.ReiniciarJuegoAsync();
-            MostrarMensaje(resultado);
-            await gameController.ActualizarEstadoAsync();
-        }
-
-        // Nombre: CmbMover_DropDownOpened
-        // Entrada: sender, e
-        // Salida: (void) asincrónico
-        // Descripcion: Actualiza las opciones de destinos al abrir el ComboBox de mover.
         private async void CmbMover_DropDownOpened(object sender, EventArgs e)
         {
-            var caminos = await gameController.ObtenerCaminosAsync();
-            CmbMover.ItemsSource = caminos ?? new List<string>();
+            // No bloqueamos toda la UI para dropdowns, pero manejamos errores
+            try
+            {
+                var caminos = await gameController.ObtenerCaminosAsync();
+                CmbMover.ItemsSource = caminos ?? new List<string>();
+            }
+            catch (Exception ex) { Console.WriteLine(ex.Message); }
         }
 
-        // Nombre: CmbMover_SelectionChanged
-        // Entrada: sender, e
-        // Salida: (void)
-        // Descripcion: Actualiza texto de estado indicando el destino seleccionado.
         private void CmbMover_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (CmbMover.SelectedItem is string destino)
                 EstadoTxt.Text = $"Vas hacia: {destino}";
         }
 
-        // Nombre: Window_Closed
-        // Entrada: sender, e
-        // Salida: (void)
-        // Descripcion: Punto para liberar recursos al cerrar la ventana (actualmente vacío).
         private void Window_Closed(object sender, EventArgs e)
         {
-            // Guardar estado, liberar recursos, etc.
+            // Cleanup
         }
 
-        // Nombre: CmbTomar_DropDownOpened
-        // Entrada: sender, e
-        // Salida: (void) asincrónico
-        // Descripcion: Actualiza objetos disponibles para tomar.
         private async void CmbTomar_DropDownOpened(object sender, EventArgs e)
         {
-            var objetos = await gameController.ObtenerObjetosEnLugarAsync();
-            CmbTomar.ItemsSource = objetos ?? new List<string>();
+             try
+            {
+                var objetos = await gameController.ObtenerObjetosEnLugarAsync();
+                CmbTomar.ItemsSource = objetos ?? new List<string>();
+            }
+            catch (Exception ex) { Console.WriteLine(ex.Message); }
         }
 
-        // Nombre: CmbTomar_SelectionChanged
-        // Entrada: sender, e
-        // Salida: (void)
-        // Descripcion: Gancho para lógica adicional al elegir objeto a tomar (vacío actual).
-        private void CmbTomar_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-        {
-            // var seleccionado = CmbTomar.SelectedItem;
-        }
+        private void CmbTomar_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e) { }
 
-        // Nombre: CmbUsar_DropDownOpened
-        // Entrada: sender, e
-        // Salida: (void)
-        // Descripcion: Rellena ComboBox con inventario actual al abrir.
         private void CmbUsar_DropDownOpened(object sender, EventArgs e)
         {
             var inventario = gameController.Estado.inventario;
             CmbUsar.ItemsSource = inventario ?? new List<string>();
         }
 
-        // Nombre: CmbUsar_SelectionChanged
-        // Entrada: sender, e
-        // Salida: (void)
-        // Descripcion: Gancho para lógica adicional al cambiar selección de uso (vacío actual).
-        private void CmbUsar_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void CmbUsar_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e) { }
+
+        private void BtnVerificarGane_Click(object sender, RoutedEventArgs e)
         {
-            // logica
+            EjecutarTareaAsync(async () =>
+            {
+                string mensaje = await gameController.VerificarGaneAsync();
+                MostrarMensaje(mensaje);
+                await gameController.ActualizarEstadoAsync();
+            });
         }
 
-        // Nombre: BtnVerificarGane_Click
-        // Entrada: sender, e
-        // Salida: (void) asincrónico
-        // Descripcion: Consulta condición de victoria y muestra resultado.
-        private async void BtnVerificarGane_Click(object sender, RoutedEventArgs e)
+        private void BtnDondeEstoy_Click(object sender, RoutedEventArgs e)
         {
-            // Llama a Prolog para verificar condiciones de victoria
-            string mensaje = await gameController.VerificarGaneAsync();
-            MostrarMensaje(mensaje);
-            await gameController.ActualizarEstadoAsync();
+            EjecutarTareaAsync(async () =>
+            {
+                string mensaje = await gameController.DondeEstoyAsync();
+                MostrarMensaje(mensaje);
+            });
         }
 
-        // Nombre: BtnDondeEstoy_Click
-        // Entrada: sender, e
-        // Salida: (void) asincrónico
-        // Descripcion: Solicita un mensaje textual de ubicación al servidor.
-        private async void BtnDondeEstoy_Click(object sender, RoutedEventArgs e)
+        private void BtnQueTengo_Click(object sender, RoutedEventArgs e)
         {
-            string mensaje = await gameController.DondeEstoyAsync();
-            MostrarMensaje(mensaje);
+            EjecutarTareaAsync(async () =>
+            {
+                var inventario = await gameController.ObtenerInventarioAsync();
+                MostrarMensaje(inventario != null && inventario.Count > 0
+                    ? $"Inventario actual: {string.Join(", ", inventario)}"
+                    : "Inventario vacío.");
+            });
         }
 
-        // Nombre: BtnQueTengo_Click
-        // Entrada: sender, e
-        // Salida: (void) asincrónico
-        // Descripcion: Muestra inventario actual consultándolo directamente del servidor.
-        private async  void BtnQueTengo_Click(object sender, RoutedEventArgs e)
-        {
-            var inventario = await gameController.ObtenerInventarioAsync();
-            string mensaje = (inventario != null && inventario.Count > 0)
-                ? $"Inventario actual:\n{string.Join(", ", inventario)}"
-                : "Inventario vacío.";
-            MostrarMensaje(mensaje);
-        }
-
-        // Nombre: CmbDondeEsta_DropDownOpened
-        // Entrada: sender, e
-        // Salida: (void) asincrónico
-        // Descripcion: Rellena ComboBox con todos los objetos (inventario + lugar).
         private async void CmbDondeEsta_DropDownOpened(object sender, EventArgs e)
         {
-            var objetos = await gameController.ObtenerTodosLosObjetosAsync();
-            CmbDondeEsta.ItemsSource = objetos ?? new List<string>();
+            try
+            {
+                var objetos = await gameController.ObtenerTodosLosObjetosAsync();
+                CmbDondeEsta.ItemsSource = objetos ?? new List<string>();
+            }
+            catch { }
         }
 
-        // Nombre: CmbDondeEsta_SelectionChanged
-        // Entrada: sender, e
-        // Salida: (void) asincrónico
-        // Descripcion: Consulta ubicación del objeto seleccionado y la muestra.
-        private async void CmbDondeEsta_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void CmbDondeEsta_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (CmbDondeEsta.SelectedItem is string objeto)
             {
-                string mensaje = await gameController.DondeEstaAsync(objeto);
-                MostrarMensaje(mensaje);
+                EjecutarTareaAsync(async () =>
+                {
+                    string mensaje = await gameController.DondeEstaAsync(objeto);
+                    MostrarMensaje(mensaje);
+                });
             }
         }
-        // Nombre: CmbPuedoIr_DropDownOpened
-        // Entrada: sender, e
-        // Salida: (void) asincrónico
-        // Descripcion: Carga destinos disponibles para verificación (sin mover).
+        
         private async void CmbPuedoIr_DropDownOpened(object sender, EventArgs e)
         {
-            var caminos = await gameController.ObtenerCaminosAsync();
-            CmbPuedoIr.ItemsSource = caminos ?? new List<string>();
+            try
+            {
+                var caminos = await gameController.ObtenerCaminosAsync();
+                CmbPuedoIr.ItemsSource = caminos ?? new List<string>();
+            }
+            catch { }
         }
 
-        // Nombre: CmbPuedoIr_SelectionChanged
-        // Entrada: sender, e
-        // Salida: (void) asincrónico
-        // Descripcion: Verifica si el movimiento al destino es posible y muestra mensaje.
-        private async void CmbPuedoIr_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void CmbPuedoIr_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (CmbPuedoIr.SelectedItem is string destino)
             {
-                string mensaje = await gameController.PuedoIrAsync(destino);
-                MostrarMensaje(mensaje);
+                EjecutarTareaAsync(async () =>
+                {
+                    string mensaje = await gameController.PuedoIrAsync(destino);
+                    MostrarMensaje(mensaje);
+                });
             }
         }
 
-        // Nombre: BtnComoGano_Click
-        // Entrada: sender, e
-        // Salida: (void) asincrónico
-        // Descripcion: Obtiene instrucciones/rutas sugeridas para ganar el juego.
-        private async void BtnComoGano_Click(object sender, RoutedEventArgs e)
+        private void BtnComoGano_Click(object sender, RoutedEventArgs e)
         {
-            var instrucciones = await gameController.ComoGanoAsync();
-            string mensaje = (instrucciones != null && instrucciones.Count > 0)
-                ? $"Cómo ganar:\n{string.Join("\n", instrucciones)}"
-                : "No hay instrucciones disponibles.";
-            MostrarMensaje(mensaje);
+            EjecutarTareaAsync(async () =>
+            {
+                var instrucciones = await gameController.ComoGanoAsync();
+                MostrarMensaje(instrucciones != null && instrucciones.Count > 0
+                    ? $"Cómo ganar:\n{string.Join("\n", instrucciones)}"
+                    : "No hay instrucciones disponibles.");
+            });
+        }
+        
+        private void BtnAcercaDe_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string infoPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "info.txt");
+                if (System.IO.File.Exists(infoPath))
+                {
+                    string contenido = System.IO.File.ReadAllText(infoPath);
+                    // Mantenemos MessageBox para "Acerca de" ya que es informativo modal
+                    MessageBox.Show(contenido, "Acerca de - Aventura del Tesoro Perdido");
+                }
+                else
+                {
+                    MostrarMensaje("No se encontró el archivo info.txt.");
+                }
+            }
+            catch (Exception ex)
+            {
+                MostrarMensaje($"Error al leer info.txt: {ex.Message}");
+            }
         }
     }
 }

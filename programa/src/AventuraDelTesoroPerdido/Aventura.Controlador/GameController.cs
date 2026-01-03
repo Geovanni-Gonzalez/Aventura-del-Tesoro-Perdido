@@ -31,16 +31,33 @@ namespace Aventura.Controller
         public event Action<GameState> OnGameStateUpdated;
 
         // Nombre: GameController (constructor)
-        // Entrada: (ninguna)
-        // Salida: Instancia inicializada con HttpClient apuntando al servidor Prolog local.
+        // Entrada: urlBase (string)
+        // Salida: Instancia inicializada con HttpClient apuntando al servidor.
         // Descripcion: Configura la URL base y el cliente HTTP reutilizable.
-        public GameController()
+        public GameController(string urlBase)
         {
-            _urlBase = "http://localhost:5000"; // Servidor Prolog HTTP
+            _urlBase = urlBase;
             _httpClient = new HttpClient
             {
                 BaseAddress = new Uri(_urlBase)
             };
+        }
+
+        // Nombre: PingAsync
+        // Entrada: (ninguna)
+        // Salida: bool (true si hay conexión, false si falla)
+        // Descripcion: Realiza una petición ligera HEAD para verificar si el servidor responde.
+        public async Task<bool> PingAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("/estado");
+                return response.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         // ==============================
@@ -56,17 +73,17 @@ namespace Aventura.Controller
             try
             {
                 var response = await _httpClient.GetStringAsync("/estado");
-                var json = JsonDocument.Parse(response).RootElement;
+                var dto = JsonSerializer.Deserialize<GameStateDto>(response);
 
-                Estado.ubicacion = json.GetProperty("ubicacion").GetString() ?? "";
-                Estado.inventario = json.GetProperty("inventario")
-                                        .EnumerateArray()
-                                        .Select(x => x.GetString() ?? "")
-                                        .ToList();
-                Estado.visitados = json.GetProperty("visitados")
-                                        .EnumerateArray()
-                                        .Select(x => x.GetString() ?? "")
-                                        .ToList();
+                Estado.ubicacion = dto.Ubicacion ?? "";
+                Estado.inventario = dto.Inventario ?? new List<string>();
+                Estado.visitados = dto.Visitados ?? new List<string>();
+
+                // [Fix] Fetch additional context for the "Intelligent UI"
+                // We await these so the State is fully populated before the UI renders.
+                // We ignore the return values because these methods update 'Estado' internally.
+                await ObtenerObjetosEnLugarAsync();
+                await ObtenerCaminosAsync();
 
                 OnGameStateUpdated?.Invoke(Estado);
             }
@@ -381,25 +398,18 @@ namespace Aventura.Controller
 
                 try
                 {
-                    using (var json = JsonDocument.Parse(jsonString))
-                    {
-                        var root = json.RootElement;
+                    var dto = JsonSerializer.Deserialize<MessageDto>(jsonString);
 
-                        // Intentamos leer "mensaje"
-                        if (root.TryGetProperty("mensaje", out var mensajeProp))
-                            return mensajeProp.GetString() ?? "Sin mensaje.";
+                    if (!string.IsNullOrWhiteSpace(dto.Mensaje))
+                        return dto.Mensaje;
 
-                        // Intentamos leer "resultado"
-                        if (root.TryGetProperty("resultado", out var resultadoProp))
-                            return resultadoProp.GetString() ?? "Sin resultado.";
+                    if (!string.IsNullOrWhiteSpace(dto.Resultado))
+                        return dto.Resultado;
 
-                        // Si solo hay "error"
-                        if (root.TryGetProperty("error", out var errorProp))
-                            return $"Error del servidor: {errorProp.GetString()}";
+                    if (!string.IsNullOrWhiteSpace(dto.Error))
+                        return $"Error del servidor: {dto.Error}";
 
-                        // Si no hay nada reconocido, retorna JSON crudo
-                        return jsonString;
-                    }
+                    return jsonString; // Fallback
                 }
                 catch (JsonException)
                 {

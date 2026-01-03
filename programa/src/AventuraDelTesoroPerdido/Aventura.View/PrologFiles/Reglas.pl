@@ -69,6 +69,12 @@ puedo_ir(Destino) :-
     assertz(message(Mensaje)).
 
 puedo_ir(Destino) :-
+    requiereVisita(Destino, LugarPrevio),
+    \+ lugar_visitado(LugarPrevio), !,
+    atom_concat('Debes visitar antes: ', LugarPrevio, Mensaje),
+    assertz(message(Mensaje)).
+
+puedo_ir(Destino) :-
     atom_concat('Puedes ir a ', Destino, Mensaje),
     assertz(message(Mensaje)).
 
@@ -126,6 +132,12 @@ mover(Destino) :-
     requiere(Objeto, Destino),
     \+ objeto_usado(Objeto), !,
     atom_concat('Necesitas USAR el objeto: ', Objeto, Mensaje),
+    assertz(message(Mensaje)).
+
+mover(Destino) :-
+    requiereVisita(Destino, LugarPrevio),
+    \+ lugar_visitado(LugarPrevio), !,
+    atom_concat('Explora primero: ', LugarPrevio, Mensaje),
     assertz(message(Mensaje)).
 
 mover(Destino) :-

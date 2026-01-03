@@ -1,0 +1,9 @@
+Curso: Lenguajes de Programación
+Semestre: II Semestre 2025
+Estudiantes:
+- [Nombre Estudiante 1] (Carnet: XXXXXXXXX)
+- [Nombre Estudiante 2] (Carnet: XXXXXXXXX)
+- [Nombre Estudiante 3] (Carnet: XXXXXXXXX)
+Proyecto Programado: 3
+Fecha de entrega: 10 de noviembre de 2025
+Estatus de la entrega: Excelente
