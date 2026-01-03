@@ -1,0 +1,32 @@
+{
+  "id": "aventura-tesoro-perdido",
+  "title": "Aventura del Tesoro Perdido",
+  "shortDescription": "Juego de aventura híbrido integrando UI Moderna en WPF con Lógica Experta en Prolog.",
+  "fullDescription": "Un proyecto destacado que demuestra la interoperabilidad entre paradigmas de programación distintos. Combina una interfaz de usuario visualmente rica y moderna (Glassmorphism, Animaciones) construida en C# WPF, con un motor de backend robusto basado en SWI-Prolog que maneja las reglas del mundo, el estado del juego y la inteligencia de rutas.",
+  "technologies": [
+    "C#",
+    "WPF",
+    "XAML",
+    "SWI-Prolog",
+    "REST API",
+    "JSON",
+    ".NET"
+  ],
+  "features": [
+    "Motor de Inferencia Lógica",
+    "Interfaz Gráfica Glassmorphism",
+    "Sistema de Inventario",
+    "Pathfinding Automático",
+    "Arquitectura Cliente-Servidor"
+  ],
+  "tags": [
+    "Game Dev",
+    "Desktop App",
+    "Logic Programming",
+    "University Project"
+  ],
+  "thumbnail": "programa/src/AventuraDelTesoroPerdido/Aventura.View/Assets/Lugar/bosque.jpg",
+  "repoUrl": "https://github.com/Geovanni-Gonzalez/Aventura-del-Tesoro-Perdido",
+  "status": "Completed",
+  "year": "2025"
+}
