@@ -1,32 +1,43 @@
 {
-  "id": "aventura-tesoro-perdido",
-  "title": "Aventura del Tesoro Perdido",
-  "shortDescription": "Juego de aventura híbrido integrando UI Moderna en WPF con Lógica Experta en Prolog.",
-  "fullDescription": "Un proyecto destacado que demuestra la interoperabilidad entre paradigmas de programación distintos. Combina una interfaz de usuario visualmente rica y moderna (Glassmorphism, Animaciones) construida en C# WPF, con un motor de backend robusto basado en SWI-Prolog que maneja las reglas del mundo, el estado del juego y la inteligencia de rutas.",
-  "technologies": [
-    "C#",
-    "WPF",
-    "XAML",
-    "SWI-Prolog",
-    "REST API",
-    "JSON",
-    ".NET"
-  ],
-  "features": [
-    "Motor de Inferencia Lógica",
-    "Interfaz Gráfica Glassmorphism",
-    "Sistema de Inventario",
-    "Pathfinding Automático",
-    "Arquitectura Cliente-Servidor"
-  ],
-  "tags": [
-    "Game Dev",
-    "Desktop App",
-    "Logic Programming",
-    "University Project"
-  ],
-  "thumbnail": "programa/src/AventuraDelTesoroPerdido/Aventura.View/Assets/Lugar/bosque.jpg",
-  "repoUrl": "https://github.com/Geovanni-Gonzalez/Aventura-del-Tesoro-Perdido",
-  "status": "Completed",
-  "year": "2025"
+    "tech": [
+        "C#",
+        "WPF",
+        "Prolog",
+        ".NET",
+        "XAML"
+    ],
+    "features": [
+        "Motor de lógica en Prolog (SWI-Prolog)",
+        "Interfaz gráfica moderna WPF (Glassmorphism)",
+        "Comunicación Cliente-Servidor HTTP/JSON",
+        "Sistema de inventario y estado inteligente",
+        "Pathfinding y validación de reglas",
+        "Animaciones y efectos visuales"
+    ],
+    "stack": {
+        "language": "C# / Prolog",
+        "framework": ".NET Framework 4.8 / SWI-Prolog",
+        "tools": [
+            "Visual Studio 2022",
+            "SWI-Prolog Server",
+            "Git"
+        ]
+    },
+    "screenshots": [
+        "https://raw.githubusercontent.com/Geovanni-Gonzalez/Aventura-del-Tesoro-Perdido/main/programa/src/AventuraDelTesoroPerdido/Aventura.View/Assets/Lugar/bosque.jpg"
+    ],
+    "description": {
+        "es": "Juego de aventura híbrido que integra una interfaz gráfica moderna en WPF (C#) con un motor de lógica experto en Prolog. Cuenta con sistema de inventario, resolución de acertijos y navegación inteligente gestionada por reglas lógicas.",
+        "en": "Hybrid adventure game integrating a modern WPF (C#) GUI with an expert logic engine in Prolog. Features inventory system, puzzle solving, and intelligent navigation managed by logical rules."
+    },
+    "keywords": [
+        "csharp",
+        "wpf",
+        "prolog",
+        "ai",
+        "logic-programming",
+        "game-development",
+        "desktop-app",
+        "glassmorphism"
+    ]
 }
