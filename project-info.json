@@ -1,35 +1,56 @@
 {
-    "project": "Aventura del Tesoro Perdido",
-    "tech": [
-        "C#",
-        "WPF",
-        "Prolog (SWI-Prolog)",
-        ".NET Framework 4.8",
-        "XAML"
-    ],
-    "features": [
-        "Expert Logic Engine in Prolog",
-        "Modern WPF GUI with Glassmorphism Aesthetics",
-        "HTTP/JSON Client-Server Architecture",
-        "Intelligent Inventory and State Management",
-        "Logical Rule-based Pathfinding & Validation",
-        "Smooth XAML Animations and Visual Effects"
-    ],
-    "stack": {
-        "language": "C# / Prolog",
-        "framework": ".NET Framework / SWI-Prolog",
-        "tools": [
-            "Visual Studio 2022",
-            "HttpClient",
-            "Git"
+    "en": {
+        "tech": [
+            "C# (WPF)",
+            "Prolog (SWI-Prolog)",
+            "Expert Logic Systems",
+            ".NET Framework"
         ],
-        "database": "Prolog Knowledge Base (Dynamic State)"
+        "features": [
+            "Expert Logic Engine implemented in Prolog",
+            "Modern WPF GUI with Glassmorphism aesthetics",
+            "HTTP/JSON Client-Server Architecture",
+            "Intelligent Inventory and State Management",
+            "Logical Rule-based Pathfinding & Validation"
+        ],
+        "stack": {
+            "language": "C# / Prolog",
+            "framework": "WPF / .NET 4.8",
+            "tools": [
+                "Visual Studio 2022",
+                "SWI-Prolog HTTP Library",
+                "XAML"
+            ],
+            "database": "Prolog Knowledge Base"
+        },
+        "screenshots": [],
+        "description": "A pioneering hybrid application that merges classic expert system logic with cutting-edge GUI design. While the front-end provides a premium Glassmorphism-styled adventure interface using WPF and C#, the entire 'intelligence' of the game resides in a standalone Prolog server. All movements, inventory interactions, and world-state transitions are validated through recursive logical rules, demonstrating a seamless orchestration between imperative UI management and declarative AI logic via HTTP/JSON protocols."
     },
-    "screenshots": [
-        "https://raw.githubusercontent.com/Geovanni-Gonzalez/Aventura-del-Tesoro-Perdido/main/programa/src/AventuraDelTesoroPerdido/Aventura.View/Assets/Lugar/bosque.jpg"
-    ],
-    "description": {
-        "es": "Juego de aventura híbrido que integra una interfaz gráfica moderna en WPF (C#) con un motor de lógica experto en Prolog. Incluye sistemas de inventario y navegación gestionada por reglas.",
-        "en": "Hybrid adventure game integrating a modern WPF (C#) GUI with an expert logic engine in Prolog. Features inventory system and navigation managed by logical rules."
+    "es": {
+        "tech": [
+            "C# (WPF)",
+            "Prolog (SWI-Prolog)",
+            "Sistemas Lógicos Expertos",
+            ".NET Framework"
+        ],
+        "features": [
+            "Motor de Lógica Experto implementado en Prolog",
+            "Interfaz WPF moderna con estética de Glásmorfismo",
+            "Arquitectura Cliente-Servidor mediante HTTP/JSON",
+            "Gestión inteligente de inventario y estado",
+            "Búsqueda de rutas y validación basada en reglas lógicas"
+        ],
+        "stack": {
+            "language": "C# / Prolog",
+            "framework": "WPF / .NET 4.8",
+            "tools": [
+                "Visual Studio 2022",
+                "Librería HTTP SWI-Prolog",
+                "XAML"
+            ],
+            "database": "Base de Conocimientos Prolog"
+        },
+        "screenshots": [],
+        "description": "Una aplicación híbrida pionera que fusiona la lógica clásica de sistemas expertos con un diseño de interfaz gráfica de vanguardia. Mientras que el front-end proporciona una interfaz de aventura con estilo de Glásmorfismo mediante WPF y C#, toda la 'inteligencia' del juego reside en un servidor independiente de Prolog. Todos los movimientos, interacciones de inventario y transiciones se validan mediante reglas lógicas recursivas, demostrando una orquestación perfecta entre UI y lógica de IA."
     }
 }
